@@ -6,6 +6,9 @@ export async function updateSession(request: NextRequest) {
     request,
   });
 
+  // Check for demo mode — allow access to protected routes
+  const isDemoMode = request.cookies.get("demo_mode")?.value === "true";
+
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -34,7 +37,7 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // Protected routes — redirect unauthenticated users to login
+  // Protected routes — redirect unauthenticated users to login (unless demo mode)
   const isProtectedRoute = request.nextUrl.pathname.startsWith("/dashboard") ||
     request.nextUrl.pathname.startsWith("/vault") ||
     request.nextUrl.pathname.startsWith("/contacts") ||
@@ -42,7 +45,7 @@ export async function updateSession(request: NextRequest) {
     request.nextUrl.pathname.startsWith("/deadman") ||
     request.nextUrl.pathname.startsWith("/settings");
 
-  if (isProtectedRoute && !user) {
+  if (isProtectedRoute && !user && !isDemoMode) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     return NextResponse.redirect(url);
@@ -52,7 +55,7 @@ export async function updateSession(request: NextRequest) {
   const isAuthRoute = request.nextUrl.pathname === "/login" ||
     request.nextUrl.pathname === "/signup";
 
-  if (isAuthRoute && user) {
+  if (isAuthRoute && (user || isDemoMode)) {
     const url = request.nextUrl.clone();
     url.pathname = "/dashboard";
     return NextResponse.redirect(url);

@@ -14,11 +14,12 @@ import {
   AlertTriangle,
   Settings,
   LogOut,
+  Sparkles,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { exitDemoMode } from "@/lib/demo-data";
 import { getInitials } from "@/lib/utils";
 import type { Profile } from "@/lib/types";
-import type { User } from "@supabase/supabase-js";
 
 const mobileNav = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
@@ -32,14 +33,23 @@ const mobileNav = [
 export function DashboardHeader({
   user,
   profile,
+  isDemoMode = false,
 }: {
-  user: User;
+  user: any;
   profile: Profile | null;
+  isDemoMode?: boolean;
 }) {
   const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   async function handleLogout() {
+    if (isDemoMode) {
+      exitDemoMode();
+      router.push("/login");
+      router.refresh();
+      return;
+    }
+
     const supabase = createClient();
     await supabase.auth.signOut();
     router.push("/login");
@@ -61,23 +71,34 @@ export function DashboardHeader({
         <div className="lg:hidden flex items-center gap-2">
           <Shield className="w-5 h-5 text-cyan-glow" />
           <span className="font-semibold">Secretly</span>
+          {isDemoMode && (
+            <span className="px-1.5 py-0.5 rounded bg-violet-500/10 border border-violet-500/20 text-[9px] font-medium text-violet-400">
+              DEMO
+            </span>
+          )}
         </div>
 
         {/* User info */}
         <div className="flex items-center gap-3">
+          {isDemoMode && (
+            <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-violet-500/10 border border-violet-500/20">
+              <Sparkles className="w-3 h-3 text-violet-400" />
+              <span className="text-xs text-violet-400 font-medium">Demo Mode</span>
+            </div>
+          )}
           <div className="text-right hidden sm:block">
             <p className="text-sm font-medium">
-              {profile?.full_name || user.email}
+              {profile?.full_name || user?.email}
             </p>
-            <p className="text-xs text-muted-foreground">{user.email}</p>
+            <p className="text-xs text-muted-foreground">{user?.email}</p>
           </div>
           <div className="w-9 h-9 rounded-full bg-cyan-glow/10 border border-cyan-glow/20 flex items-center justify-center text-xs font-medium text-cyan-glow">
-            {getInitials(profile?.full_name || user.email || "")}
+            {getInitials(profile?.full_name || user?.email || "")}
           </div>
           <button
             onClick={handleLogout}
             className="p-2 rounded-lg hover:bg-accent text-muted-foreground hover:text-foreground transition-colors"
-            title="Sign out"
+            title={isDemoMode ? "Exit demo" : "Sign out"}
           >
             <LogOut className="w-4 h-4" />
           </button>
@@ -117,6 +138,19 @@ export function DashboardHeader({
                 </Link>
               ))}
             </nav>
+
+            {isDemoMode && (
+              <div className="mt-6 p-4 rounded-xl bg-violet-500/5 border border-violet-500/15">
+                <p className="text-xs text-violet-400 font-medium mb-2">Demo Mode Active</p>
+                <Link
+                  href="/signup"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="text-xs text-cyan-glow hover:text-cyan-soft transition-colors"
+                >
+                  Create a real account →
+                </Link>
+              </div>
+            )}
           </div>
         </div>
       )}

@@ -4,32 +4,32 @@
 
 @layer base {
   :root {
-    --background: 222 47% 6%;
-    --foreground: 210 20% 90%;
+    --background: 222 47% 5%;
+    --foreground: 210 20% 92%;
 
-    --card: 222 44% 8%;
-    --card-foreground: 210 20% 90%;
+    --card: 222 44% 7%;
+    --card-foreground: 210 20% 92%;
 
-    --popover: 222 44% 8%;
-    --popover-foreground: 210 20% 90%;
+    --popover: 222 44% 7%;
+    --popover-foreground: 210 20% 92%;
 
     --primary: 187 92% 69%;
-    --primary-foreground: 222 47% 6%;
+    --primary-foreground: 222 47% 5%;
 
-    --secondary: 222 30% 14%;
-    --secondary-foreground: 210 20% 90%;
+    --secondary: 222 30% 12%;
+    --secondary-foreground: 210 20% 92%;
 
-    --muted: 222 30% 14%;
+    --muted: 222 30% 12%;
     --muted-foreground: 215 20% 55%;
 
-    --accent: 222 30% 18%;
-    --accent-foreground: 210 20% 90%;
+    --accent: 222 30% 16%;
+    --accent-foreground: 210 20% 92%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 210 20% 98%;
 
-    --border: 222 30% 16%;
-    --input: 222 30% 16%;
+    --border: 222 30% 14%;
+    --input: 222 30% 14%;
     --ring: 187 92% 69%;
 
     --radius: 0.75rem;
@@ -46,33 +46,36 @@
     font-feature-settings: "rlig" 1, "calt" 1;
   }
 
-  /* Custom scrollbar */
   ::-webkit-scrollbar {
     width: 6px;
     height: 6px;
   }
 
   ::-webkit-scrollbar-track {
-    background: hsl(222 44% 8%);
+    background: hsl(222 44% 6%);
   }
 
   ::-webkit-scrollbar-thumb {
-    background: hsl(222 30% 20%);
+    background: hsl(222 30% 18%);
     border-radius: 3px;
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    background: hsl(222 30% 30%);
+    background: hsl(222 30% 28%);
   }
 }
 
 @layer utilities {
   .glass {
-    @apply bg-white/[0.03] backdrop-blur-xl border border-white/[0.06] shadow-soft;
+    @apply bg-white/[0.02] backdrop-blur-xl border border-white/[0.05] shadow-soft;
   }
 
   .glass-hover {
-    @apply hover:bg-white/[0.06] hover:border-white/[0.1] transition-all duration-300;
+    @apply hover:bg-white/[0.05] hover:border-white/[0.1] transition-all duration-300;
+  }
+
+  .glass-strong {
+    @apply bg-white/[0.04] backdrop-blur-2xl border border-white/[0.08] shadow-soft;
   }
 
   .glow-border {
@@ -83,28 +86,47 @@
     @apply bg-gradient-to-r from-cyan-glow via-cyan-soft to-cyan-glow bg-clip-text text-transparent;
   }
 
+  .text-gradient-subtle {
+    @apply bg-gradient-to-b from-foreground to-muted-foreground bg-clip-text text-transparent;
+  }
+
   .bg-grid {
     background-size: 60px 60px;
     background-image:
-      linear-gradient(to right, hsl(222 30% 12%) 1px, transparent 1px),
-      linear-gradient(to bottom, hsl(222 30% 12%) 1px, transparent 1px);
+      linear-gradient(to right, hsl(222 30% 10%) 1px, transparent 1px),
+      linear-gradient(to bottom, hsl(222 30% 10%) 1px, transparent 1px);
+  }
+
+  .bg-dot-pattern {
+    background-image: radial-gradient(circle, hsl(222 30% 18%) 1px, transparent 1px);
+    background-size: 24px 24px;
   }
 
   .animate-in {
-    animation: fade-up 0.5s ease-out forwards;
+    animation: fade-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   }
 
-  .delay-100 {
-    animation-delay: 100ms;
+  .animate-in-left {
+    animation: fade-left 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   }
 
-  .delay-200 {
-    animation-delay: 200ms;
+  .animate-in-right {
+    animation: fade-right 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   }
 
-  .delay-300 {
-    animation-delay: 300ms;
+  .animate-in-scale {
+    animation: fade-scale 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   }
+
+  .delay-75 { animation-delay: 75ms; }
+  .delay-100 { animation-delay: 100ms; }
+  .delay-150 { animation-delay: 150ms; }
+  .delay-200 { animation-delay: 200ms; }
+  .delay-300 { animation-delay: 300ms; }
+  .delay-400 { animation-delay: 400ms; }
+  .delay-500 { animation-delay: 500ms; }
+  .delay-600 { animation-delay: 600ms; }
+  .delay-700 { animation-delay: 700ms; }
 
   .shimmer {
     @apply relative overflow-hidden;
@@ -116,10 +138,93 @@
     background: linear-gradient(
       90deg,
       transparent,
-      rgba(103, 232, 249, 0.05),
+      rgba(103, 232, 249, 0.04),
       transparent
     );
     background-size: 200% 100%;
-    animation: shimmer 3s linear infinite;
+    animation: shimmer 4s linear infinite;
   }
+
+  .float {
+    animation: float 6s ease-in-out infinite;
+  }
+
+  .float-slow {
+    animation: float 8s ease-in-out infinite;
+  }
+
+  .float-delay {
+    animation: float 6s ease-in-out 2s infinite;
+  }
+
+  .pulse-glow {
+    animation: pulse-glow 3s ease-in-out infinite;
+  }
+
+  .rotate-slow {
+    animation: rotate-slow 20s linear infinite;
+  }
+
+  .line-draw {
+    animation: line-draw 1.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
+  .counter {
+    animation: counter-up 2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+}
+
+@keyframes fade-up {
+  0% { opacity: 0; transform: translateY(20px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fade-left {
+  0% { opacity: 0; transform: translateX(20px); }
+  100% { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes fade-right {
+  0% { opacity: 0; transform: translateX(-20px); }
+  100% { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes fade-scale {
+  0% { opacity: 0; transform: scale(0.95); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-12px); }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { opacity: 0.4; box-shadow: 0 0 20px rgba(103, 232, 249, 0.1); }
+  50% { opacity: 1; box-shadow: 0 0 40px rgba(103, 232, 249, 0.25); }
+}
+
+@keyframes rotate-slow {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes line-draw {
+  0% { width: 0; }
+  100% { width: 100%; }
+}
+
+@keyframes counter-up {
+  0% { opacity: 0; transform: translateY(10px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
 }

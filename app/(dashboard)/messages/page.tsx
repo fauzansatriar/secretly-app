@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { encrypt, decrypt, getSessionKey, generateKey, storeSessionKey } from "@/lib/crypto/encryption";
+import { isDemoMode, DEMO_MESSAGES } from "@/lib/demo-data";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -51,9 +52,18 @@ export default function MessagesPage() {
   const [loading, setLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
   const [editMessage, setEditMessage] = useState<DecryptedMessage | null>(null);
+  const [isDemo, setIsDemo] = useState(false);
 
   const loadMessages = useCallback(async () => {
     setLoading(true);
+
+    if (isDemoMode()) {
+      setIsDemo(true);
+      setMessages(DEMO_MESSAGES as DecryptedMessage[]);
+      setLoading(false);
+      return;
+    }
+
     const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
@@ -99,6 +109,10 @@ export default function MessagesPage() {
   }, [loadMessages]);
 
   async function handleDelete(id: string) {
+    if (isDemo) {
+      alert("Demo mode: Sign up for a real account to manage messages.");
+      return;
+    }
     if (!confirm("Delete this scheduled message?")) return;
     const supabase = createClient();
     await supabase.from("scheduled_messages").delete().eq("id", id);
@@ -106,6 +120,10 @@ export default function MessagesPage() {
   }
 
   async function handleCancel(id: string) {
+    if (isDemo) {
+      alert("Demo mode: Sign up for a real account to manage messages.");
+      return;
+    }
     const supabase = createClient();
     await supabase
       .from("scheduled_messages")
@@ -124,7 +142,9 @@ export default function MessagesPage() {
             Scheduled Messages
           </h1>
           <p className="text-muted-foreground text-sm mt-1">
-            Encrypted messages to be delivered in the future.
+            {isDemo
+              ? "Sample scheduled messages. Sign up to create your own."
+              : "Encrypted messages to be delivered in the future."}
           </p>
         </div>
         <Button onClick={() => setShowCreate(true)} className="gap-2">
@@ -217,6 +237,7 @@ export default function MessagesPage() {
         onOpenChange={setShowCreate}
         onSuccess={loadMessages}
         mode="create"
+        isDemo={isDemo}
       />
 
       {/* Edit Dialog */}
@@ -227,6 +248,7 @@ export default function MessagesPage() {
           onSuccess={loadMessages}
           mode="edit"
           message={editMessage}
+          isDemo={isDemo}
         />
       )}
     </div>
@@ -239,12 +261,14 @@ function MessageDialog({
   onSuccess,
   mode,
   message,
+  isDemo,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
   mode: "create" | "edit";
   message?: DecryptedMessage;
+  isDemo: boolean;
 }) {
   const [recipientEmail, setRecipientEmail] = useState(message?.recipient_email || "");
   const [recipientName, setRecipientName] = useState(message?.recipient_name || "");
@@ -274,6 +298,13 @@ function MessageDialog({
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+
+    if (isDemo) {
+      alert("Demo mode: Sign up for a real account to schedule encrypted messages.");
+      onOpenChange(false);
+      return;
+    }
+
     setSaving(true);
     setError(null);
 

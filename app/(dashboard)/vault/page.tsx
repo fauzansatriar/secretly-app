@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { encrypt, decrypt, getSessionKey, generateKey, storeSessionKey } from "@/lib/crypto/encryption";
+import { isDemoMode, DEMO_VAULT_ITEMS } from "@/lib/demo-data";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -63,9 +64,19 @@ export default function VaultPage() {
   const [editItem, setEditItem] = useState<DecryptedVaultItem | null>(null);
   const [viewItem, setViewItem] = useState<DecryptedVaultItem | null>(null);
   const [showContent, setShowContent] = useState(false);
+  const [isDemo, setIsDemo] = useState(false);
 
   const loadItems = useCallback(async () => {
     setLoading(true);
+
+    // Check demo mode
+    if (isDemoMode()) {
+      setIsDemo(true);
+      setItems(DEMO_VAULT_ITEMS);
+      setLoading(false);
+      return;
+    }
+
     const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
@@ -96,7 +107,6 @@ export default function VaultPage() {
         const content = await decrypt(item.content, item.iv, key);
         decrypted.push({ ...item, title, content });
       } catch {
-        // If decryption fails, show placeholder
         decrypted.push({
           ...item,
           title: "[Encrypted - wrong key]",
@@ -132,7 +142,9 @@ export default function VaultPage() {
             Vault
           </h1>
           <p className="text-muted-foreground text-sm mt-1">
-            Your encrypted secrets. Only you can see them.
+            {isDemo
+              ? "Sample encrypted secrets. Sign up to store your own."
+              : "Your encrypted secrets. Only you can see them."}
           </p>
         </div>
         <Button onClick={() => setShowCreate(true)} className="gap-2">
@@ -221,6 +233,7 @@ export default function VaultPage() {
         onOpenChange={setShowCreate}
         onSuccess={loadItems}
         mode="create"
+        isDemo={isDemo}
       />
 
       {/* Edit Dialog */}
@@ -231,6 +244,7 @@ export default function VaultPage() {
           onSuccess={loadItems}
           mode="edit"
           item={editItem}
+          isDemo={isDemo}
         />
       )}
 
@@ -289,6 +303,7 @@ export default function VaultPage() {
                   setViewItem(null);
                   loadItems();
                 }}
+                isDemo={isDemo}
               />
             </DialogFooter>
           </DialogContent>
@@ -306,12 +321,14 @@ function VaultItemDialog({
   onSuccess,
   mode,
   item,
+  isDemo,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
   mode: "create" | "edit";
   item?: DecryptedVaultItem;
+  isDemo: boolean;
 }) {
   const [title, setTitle] = useState(item?.title || "");
   const [content, setContent] = useState(item?.content || "");
@@ -335,6 +352,13 @@ function VaultItemDialog({
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+
+    if (isDemo) {
+      alert("Demo mode: Sign up for a real account to save encrypted vault items.");
+      onOpenChange(false);
+      return;
+    }
+
     setSaving(true);
     setError(null);
 
@@ -343,18 +367,14 @@ function VaultItemDialog({
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
 
-      // Get or create session key
       let key = await getSessionKey();
       if (!key) {
         key = await generateKey();
         await storeSessionKey(key);
       }
 
-      // Encrypt title and content with the same IV
       const encTitle = await encrypt(title, key);
       const encContent = await encrypt(content, key);
-
-      // Use the same IV for both (stored once)
       const iv = encTitle.iv;
 
       if (mode === "create") {
@@ -472,13 +492,19 @@ function VaultItemDialog({
 function DeleteButton({
   itemId,
   onSuccess,
+  isDemo,
 }: {
   itemId: string;
   onSuccess: () => void;
+  isDemo: boolean;
 }) {
   const [deleting, setDeleting] = useState(false);
 
   async function handleDelete() {
+    if (isDemo) {
+      alert("Demo mode: Sign up for a real account to manage vault items.");
+      return;
+    }
     if (!confirm("Are you sure? This cannot be undone.")) return;
     setDeleting(true);
     const supabase = createClient();

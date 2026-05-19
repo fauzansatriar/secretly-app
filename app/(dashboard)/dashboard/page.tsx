@@ -1,3 +1,4 @@
+import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
@@ -14,45 +15,69 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { PLAN_LIMITS } from "@/lib/types";
 import { timeUntil } from "@/lib/utils";
+import {
+  DEMO_PROFILE,
+  DEMO_VAULT_ITEMS,
+  DEMO_CONTACTS,
+  DEMO_MESSAGES,
+  DEMO_DEADMAN,
+} from "@/lib/demo-data";
 
 export default async function DashboardPage() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const cookieStore = await cookies();
+  const isDemoMode = cookieStore.get("demo_mode")?.value === "true";
 
-  if (!user) redirect("/login");
+  let plan: "free" | "pro";
+  let vaultCount: number;
+  let contactsCount: number;
+  let messagesCount: number;
+  let deadman: any;
 
-  // Fetch all counts in parallel
-  const [profileRes, vaultRes, contactsRes, messagesRes, deadmanRes] =
-    await Promise.all([
-      supabase.from("profiles").select("plan").eq("id", user.id).single(),
-      supabase
-        .from("vault_items")
-        .select("id", { count: "exact", head: true })
-        .eq("user_id", user.id),
-      supabase
-        .from("emergency_contacts")
-        .select("id", { count: "exact", head: true })
-        .eq("user_id", user.id),
-      supabase
-        .from("scheduled_messages")
-        .select("id", { count: "exact", head: true })
-        .eq("user_id", user.id)
-        .eq("status", "pending"),
-      supabase
-        .from("deadman_status")
-        .select("*")
-        .eq("user_id", user.id)
-        .single(),
-    ]);
+  if (isDemoMode) {
+    plan = DEMO_PROFILE.plan;
+    vaultCount = DEMO_VAULT_ITEMS.length;
+    contactsCount = DEMO_CONTACTS.length;
+    messagesCount = DEMO_MESSAGES.filter((m) => m.status === "pending").length;
+    deadman = DEMO_DEADMAN;
+  } else {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
-  const plan = (profileRes.data?.plan || "free") as "free" | "pro";
+    if (!user) redirect("/login");
+
+    const [profileRes, vaultRes, contactsRes, messagesRes, deadmanRes] =
+      await Promise.all([
+        supabase.from("profiles").select("plan").eq("id", user.id).single(),
+        supabase
+          .from("vault_items")
+          .select("id", { count: "exact", head: true })
+          .eq("user_id", user.id),
+        supabase
+          .from("emergency_contacts")
+          .select("id", { count: "exact", head: true })
+          .eq("user_id", user.id),
+        supabase
+          .from("scheduled_messages")
+          .select("id", { count: "exact", head: true })
+          .eq("user_id", user.id)
+          .eq("status", "pending"),
+        supabase
+          .from("deadman_status")
+          .select("*")
+          .eq("user_id", user.id)
+          .single(),
+      ]);
+
+    plan = (profileRes.data?.plan || "free") as "free" | "pro";
+    vaultCount = vaultRes.count || 0;
+    contactsCount = contactsRes.count || 0;
+    messagesCount = messagesRes.count || 0;
+    deadman = deadmanRes.data;
+  }
+
   const limits = PLAN_LIMITS[plan];
-  const vaultCount = vaultRes.count || 0;
-  const contactsCount = contactsRes.count || 0;
-  const messagesCount = messagesRes.count || 0;
-  const deadman = deadmanRes.data;
 
   const stats = [
     {
@@ -105,10 +130,34 @@ export default async function DashboardPage() {
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
         <p className="text-muted-foreground mt-1">
-          Your digital legacy at a glance. Everything encrypted, everything
-          secure.
+          {isDemoMode
+            ? "Exploring Secretly with demo data. Everything you see is sample content."
+            : "Your digital legacy at a glance. Everything encrypted, everything secure."}
         </p>
       </div>
+
+      {/* Demo Banner */}
+      {isDemoMode && (
+        <div className="p-4 rounded-xl bg-gradient-to-r from-violet-500/10 to-cyan-glow/5 border border-violet-500/20 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-violet-500/10 flex items-center justify-center">
+              <Activity className="w-4 h-4 text-violet-400" />
+            </div>
+            <div>
+              <p className="text-sm font-medium">You&apos;re in Demo Mode</p>
+              <p className="text-xs text-muted-foreground">
+                This is sample data. Create an account to store your own encrypted secrets.
+              </p>
+            </div>
+          </div>
+          <Link
+            href="/signup"
+            className="shrink-0 px-4 py-2 rounded-lg bg-cyan-glow text-navy-950 text-xs font-medium hover:bg-cyan-soft transition-all shadow-glow"
+          >
+            Sign Up Free
+          </Link>
+        </div>
+      )}
 
       {/* Stats Grid */}
       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -156,18 +205,9 @@ export default async function DashboardPage() {
               </div>
             </div>
             <div className="space-y-3">
-              <StatusRow
-                label="End-to-end encryption"
-                status="active"
-              />
-              <StatusRow
-                label="Zero-knowledge architecture"
-                status="active"
-              />
-              <StatusRow
-                label="Row-level security"
-                status="active"
-              />
+              <StatusRow label="End-to-end encryption" status="active" />
+              <StatusRow label="Zero-knowledge architecture" status="active" />
+              <StatusRow label="Row-level security" status="active" />
               <StatusRow
                 label="Dead-man switch"
                 status={deadman?.is_active ? "active" : "inactive"}
