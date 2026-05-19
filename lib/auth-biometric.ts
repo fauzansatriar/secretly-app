@@ -79,7 +79,7 @@ export async function registerBiometric(): Promise<boolean> {
         name: "user@secretly.app",
         displayName: "Secretly User",
       },
-      challenge: new TextEncoder().encode(challenge as string),
+      challenge: challenge as unknown as BufferSource,
       pubKeyCredParams: [
         { alg: -7, type: "public-key" },   // ES256
         { alg: -257, type: "public-key" }, // RS256
