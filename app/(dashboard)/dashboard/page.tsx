@@ -232,7 +232,7 @@ export default function DashboardPage() {
         <div className="fixed inset-0 z-50 flex items-end justify-center">
           <div className="absolute inset-0 bg-black/40 dark:bg-black/60 backdrop-blur-sm" onClick={() => setDetailEntry(null)} />
           <div className="relative w-full max-w-lg animate-in opacity-0">
-            <div className="bg-card border border-border rounded-t-3xl p-6 pb-10 safe-bottom">
+            <div className="bg-card border border-border rounded-t-3xl p-6 pb-24 safe-bottom">
               <button onClick={() => setDetailEntry(null)} className="absolute top-4 right-4 w-8 h-8 rounded-full bg-secondary flex items-center justify-center text-muted-foreground">
                 <X className="w-4 h-4" />
               </button>
@@ -380,7 +380,7 @@ function PasswordForm({
     <div className="fixed inset-0 z-50 flex items-end justify-center">
       <div className="absolute inset-0 bg-black/40 dark:bg-black/60 backdrop-blur-sm" onClick={onClose} />
       <div className="relative w-full max-w-lg animate-in opacity-0">
-        <div className="bg-card border border-border rounded-t-3xl p-6 pb-8 safe-bottom max-h-[85vh] overflow-y-auto">
+        <div className="bg-card border border-border rounded-t-3xl p-6 pb-24 safe-bottom max-h-[85vh] overflow-y-auto">
           <div className="flex items-center justify-between mb-5">
             <h2 className="text-lg font-bold">{entry ? "Edit Password" : "Add Password"}</h2>
             <button onClick={onClose} className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center text-muted-foreground">

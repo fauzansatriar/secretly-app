@@ -161,7 +161,7 @@ export default function VaultSearchPage() {
         <div className="fixed inset-0 z-50 flex items-end justify-center">
           <div className="absolute inset-0 bg-black/40 dark:bg-black/60 backdrop-blur-sm" onClick={() => setSelectedEntry(null)} />
           <div className="relative w-full max-w-lg animate-in opacity-0">
-            <div className="bg-card border border-border rounded-t-3xl p-6 pb-10 safe-bottom max-h-[80vh] overflow-y-auto">
+            <div className="bg-card border border-border rounded-t-3xl p-6 pb-24 safe-bottom max-h-[85vh] overflow-y-auto">
               <button onClick={() => setSelectedEntry(null)} className="absolute top-4 right-4 w-8 h-8 rounded-full bg-secondary flex items-center justify-center text-muted-foreground">
                 <X className="w-4 h-4" />
               </button>
