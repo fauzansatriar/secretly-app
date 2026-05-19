@@ -134,7 +134,7 @@ export async function authenticateWithBiometric(): Promise<boolean> {
     const challenge = getRandomChallenge();
 
     const getOptions: PublicKeyCredentialRequestOptions = {
-      challenge,
+      challenge: challenge as unknown as BufferSource,
       rpId: RP_ID,
       allowCredentials: [
         {
