@@ -15,6 +15,7 @@ import {
   Bell,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { isDemoMode, DEMO_CONTACTS } from "@/lib/demo-data";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,16 +30,24 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import type { EmergencyContact } from "@/lib/types";
-import { formatDate } from "@/lib/utils";
 
 export default function ContactsPage() {
   const [contacts, setContacts] = useState<EmergencyContact[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
   const [editContact, setEditContact] = useState<EmergencyContact | null>(null);
+  const [isDemo, setIsDemo] = useState(false);
 
   const loadContacts = useCallback(async () => {
     setLoading(true);
+
+    if (isDemoMode()) {
+      setIsDemo(true);
+      setContacts(DEMO_CONTACTS);
+      setLoading(false);
+      return;
+    }
+
     const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
@@ -58,6 +67,10 @@ export default function ContactsPage() {
   }, [loadContacts]);
 
   async function handleDelete(id: string) {
+    if (isDemo) {
+      alert("Demo mode: Sign up for a real account to manage contacts.");
+      return;
+    }
     if (!confirm("Remove this emergency contact?")) return;
     const supabase = createClient();
     await supabase.from("emergency_contacts").delete().eq("id", id);
@@ -74,7 +87,9 @@ export default function ContactsPage() {
             Emergency Contacts
           </h1>
           <p className="text-muted-foreground text-sm mt-1">
-            Trusted people who can be notified when it matters most.
+            {isDemo
+              ? "Sample contacts. Sign up to manage your own trusted people."
+              : "Trusted people who can be notified when it matters most."}
           </p>
         </div>
         <Button onClick={() => setShowCreate(true)} className="gap-2">
@@ -180,6 +195,7 @@ export default function ContactsPage() {
         onOpenChange={setShowCreate}
         onSuccess={loadContacts}
         mode="create"
+        isDemo={isDemo}
       />
 
       {/* Edit Dialog */}
@@ -190,6 +206,7 @@ export default function ContactsPage() {
           onSuccess={loadContacts}
           mode="edit"
           contact={editContact}
+          isDemo={isDemo}
         />
       )}
     </div>
@@ -202,12 +219,14 @@ function ContactDialog({
   onSuccess,
   mode,
   contact,
+  isDemo,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
   mode: "create" | "edit";
   contact?: EmergencyContact;
+  isDemo: boolean;
 }) {
   const [name, setName] = useState(contact?.name || "");
   const [email, setEmail] = useState(contact?.email || "");
@@ -237,6 +256,13 @@ function ContactDialog({
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+
+    if (isDemo) {
+      alert("Demo mode: Sign up for a real account to manage contacts.");
+      onOpenChange(false);
+      return;
+    }
+
     setSaving(true);
     setError(null);
 

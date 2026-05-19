@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Shield, Mail, Lock, Loader2 } from "lucide-react";
+import { Shield, Mail, Lock, Loader2, Zap } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
 export default function LoginPage() {
@@ -11,6 +11,7 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [demoLoading, setDemoLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   async function handleLogin(e: React.FormEvent) {
@@ -42,6 +43,21 @@ export default function LoginPage() {
         redirectTo: `${window.location.origin}/auth/callback`,
       },
     });
+  }
+
+  async function handleDemoLogin() {
+    setDemoLoading(true);
+    setError(null);
+
+    // Set demo mode cookie/flag and redirect
+    document.cookie = "demo_mode=true; path=/; max-age=86400; SameSite=Lax";
+    sessionStorage.setItem("secretly_demo_mode", "true");
+
+    // Small delay for UX feedback
+    await new Promise((r) => setTimeout(r, 600));
+
+    router.push("/dashboard");
+    router.refresh();
   }
 
   return (
@@ -126,6 +142,7 @@ export default function LoginPage() {
             </div>
           </div>
 
+          {/* Google Login */}
           <button
             onClick={handleGoogleLogin}
             className="w-full py-2.5 rounded-xl glass glass-hover text-sm font-medium flex items-center justify-center gap-2"
@@ -149,6 +166,23 @@ export default function LoginPage() {
               />
             </svg>
             Continue with Google
+          </button>
+
+          {/* Demo Account */}
+          <button
+            onClick={handleDemoLogin}
+            disabled={demoLoading}
+            className="w-full mt-3 py-2.5 rounded-xl bg-gradient-to-r from-violet-500/10 to-cyan-glow/10 border border-violet-500/20 text-sm font-medium flex items-center justify-center gap-2 hover:from-violet-500/20 hover:to-cyan-glow/20 hover:border-violet-500/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {demoLoading ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <Zap className="w-4 h-4 text-violet-400" />
+            )}
+            <span>
+              Try Demo Account
+            </span>
+            <span className="text-xs text-muted-foreground ml-1">— no signup needed</span>
           </button>
 
           <p className="mt-6 text-center text-sm text-muted-foreground">

@@ -13,6 +13,7 @@ import {
   Bell,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { isDemoMode, DEMO_DEADMAN } from "@/lib/demo-data";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,6 +27,7 @@ export default function DeadmanPage() {
   const [loading, setLoading] = useState(true);
   const [checking, setChecking] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [isDemo, setIsDemo] = useState(false);
 
   // Settings form
   const [intervalDays, setIntervalDays] = useState(30);
@@ -35,6 +37,17 @@ export default function DeadmanPage() {
 
   const loadStatus = useCallback(async () => {
     setLoading(true);
+
+    if (isDemoMode()) {
+      setIsDemo(true);
+      setStatus(DEMO_DEADMAN);
+      setIntervalDays(DEMO_DEADMAN.check_in_interval_days);
+      setGracePeriod(DEMO_DEADMAN.grace_period_hours);
+      setAlertContacts(DEMO_DEADMAN.alert_contacts);
+      setLoading(false);
+      return;
+    }
+
     const supabase = createClient();
     const {
       data: { user },
@@ -61,6 +74,11 @@ export default function DeadmanPage() {
   }, [loadStatus]);
 
   async function handleActivate() {
+    if (isDemo) {
+      alert("Demo mode: Sign up for a real account to activate the dead-man switch.");
+      return;
+    }
+
     setSaving(true);
     const supabase = createClient();
     const {
@@ -103,6 +121,10 @@ export default function DeadmanPage() {
   }
 
   async function handleDeactivate() {
+    if (isDemo) {
+      alert("Demo mode: Sign up for a real account to manage the dead-man switch.");
+      return;
+    }
     if (!status) return;
     if (!confirm("Are you sure you want to deactivate the dead-man switch?"))
       return;
@@ -116,6 +138,10 @@ export default function DeadmanPage() {
   }
 
   async function handleCheckIn() {
+    if (isDemo) {
+      alert("Demo mode: Check-in recorded! (This is simulated — sign up for real protection.)");
+      return;
+    }
     if (!status) return;
     setChecking(true);
 
@@ -138,6 +164,10 @@ export default function DeadmanPage() {
   }
 
   async function handleSaveSettings() {
+    if (isDemo) {
+      alert("Demo mode: Sign up for a real account to configure settings.");
+      return;
+    }
     if (!status) return;
     setSaving(true);
 
@@ -183,8 +213,9 @@ export default function DeadmanPage() {
           Dead-Man Switch
         </h1>
         <p className="text-muted-foreground text-sm mt-1">
-          Automated safety check. If you don&apos;t check in, your contacts
-          are notified.
+          {isDemo
+            ? "Demo dead-man switch. Sign up to set up real protection."
+            : "Automated safety check. If you don't check in, your contacts are notified."}
         </p>
       </div>
 
