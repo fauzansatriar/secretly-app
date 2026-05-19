@@ -1,0 +1,125 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 222 47% 6%;
+    --foreground: 210 20% 90%;
+
+    --card: 222 44% 8%;
+    --card-foreground: 210 20% 90%;
+
+    --popover: 222 44% 8%;
+    --popover-foreground: 210 20% 90%;
+
+    --primary: 187 92% 69%;
+    --primary-foreground: 222 47% 6%;
+
+    --secondary: 222 30% 14%;
+    --secondary-foreground: 210 20% 90%;
+
+    --muted: 222 30% 14%;
+    --muted-foreground: 215 20% 55%;
+
+    --accent: 222 30% 18%;
+    --accent-foreground: 210 20% 90%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 210 20% 98%;
+
+    --border: 222 30% 16%;
+    --input: 222 30% 16%;
+    --ring: 187 92% 69%;
+
+    --radius: 0.75rem;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: hsl(222 44% 8%);
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: hsl(222 30% 20%);
+    border-radius: 3px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: hsl(222 30% 30%);
+  }
+}
+
+@layer utilities {
+  .glass {
+    @apply bg-white/[0.03] backdrop-blur-xl border border-white/[0.06] shadow-soft;
+  }
+
+  .glass-hover {
+    @apply hover:bg-white/[0.06] hover:border-white/[0.1] transition-all duration-300;
+  }
+
+  .glow-border {
+    @apply border border-cyan-glow/20 shadow-glow;
+  }
+
+  .text-gradient {
+    @apply bg-gradient-to-r from-cyan-glow via-cyan-soft to-cyan-glow bg-clip-text text-transparent;
+  }
+
+  .bg-grid {
+    background-size: 60px 60px;
+    background-image:
+      linear-gradient(to right, hsl(222 30% 12%) 1px, transparent 1px),
+      linear-gradient(to bottom, hsl(222 30% 12%) 1px, transparent 1px);
+  }
+
+  .animate-in {
+    animation: fade-up 0.5s ease-out forwards;
+  }
+
+  .delay-100 {
+    animation-delay: 100ms;
+  }
+
+  .delay-200 {
+    animation-delay: 200ms;
+  }
+
+  .delay-300 {
+    animation-delay: 300ms;
+  }
+
+  .shimmer {
+    @apply relative overflow-hidden;
+  }
+
+  .shimmer::after {
+    content: "";
+    @apply absolute inset-0;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(103, 232, 249, 0.05),
+      transparent
+    );
+    background-size: 200% 100%;
+    animation: shimmer 3s linear infinite;
+  }
+}
