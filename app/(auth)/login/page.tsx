@@ -22,20 +22,20 @@ export default function LoginPage() {
       <div className="fixed inset-0 bg-dot-pattern opacity-20" />
       <div className="fixed top-0 left-1/2 -translate-x-1/2 w-[600px] h-[400px] bg-cyan-glow/[0.03] rounded-full blur-[120px]" />
 
-      <div className="relative w-full max-w-sm text-center">
-        <Link href="/" className="inline-flex items-center gap-2.5 mb-10">
+      <div className="relative w-full max-w-sm flex flex-col items-center text-center">
+        <Link href="/" className="flex items-center justify-center gap-2.5 mb-10">
           <div className="w-10 h-10 rounded-xl bg-cyan-glow/10 border border-cyan-glow/20 flex items-center justify-center">
             <Shield className="w-5 h-5 text-cyan-glow" />
           </div>
           <span className="text-xl font-semibold tracking-tight">Secretly</span>
         </Link>
 
-        <div className="glass-strong rounded-3xl p-8">
-          <div className="w-14 h-14 rounded-2xl bg-cyan-glow/10 border border-cyan-glow/20 flex items-center justify-center mx-auto mb-5">
+        <div className="w-full glass-strong rounded-3xl p-8 flex flex-col items-center">
+          <div className="w-14 h-14 rounded-2xl bg-cyan-glow/10 border border-cyan-glow/20 flex items-center justify-center mb-5">
             <Fingerprint className="w-6 h-6 text-cyan-glow" />
           </div>
           <h1 className="text-xl font-semibold mb-2">Access Secretly</h1>
-          <p className="text-sm text-muted-foreground mb-8">
+          <p className="text-sm text-muted-foreground mb-8 max-w-xs">
             Explore the platform instantly with our demo workspace. No sign-up needed.
           </p>
 
