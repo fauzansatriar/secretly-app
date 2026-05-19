@@ -1,12 +1,15 @@
-/** @type {import('next').NextConfig} */
-const nextConfig = {
-  typescript: {
-    // Ini perintah mutlak supaya build tetep jalan walau TypeScript error
-    ignoreBuildErrors: true,
-  },
-  eslint: {
-    // Ini biar ESLint gak ikut-ikutan ngetes kode pas build
-    ignoreDuringBuilds: true,
+import type { NextConfig } from "next";
+
+const nextConfig: NextConfig = {
+  reactStrictMode: true,
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "www.google.com",
+        pathname: "/s2/favicons/**",
+      },
+    ],
   },
 };
 

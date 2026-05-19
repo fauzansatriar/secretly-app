@@ -1,5 +1,3 @@
-// ─── Password Manager Types ──────────────────────────────────────────────────
-
 export type Plan = "free" | "pro";
 
 export interface Profile {
@@ -29,12 +27,26 @@ export interface PasswordEntry {
   password: string;
   url: string | null;
   category: PasswordCategory;
-  icon_color: string;
+  icon_url: string;
   notes: string | null;
   iv: string;
   created_at: string;
   updated_at: string;
 }
+
+export interface AppSettings {
+  biometric_enabled: boolean;
+  auto_lock_seconds: number;
+  dark_mode: boolean;
+  notifications_enabled: boolean;
+}
+
+export const DEFAULT_SETTINGS: AppSettings = {
+  biometric_enabled: true,
+  auto_lock_seconds: 60,
+  dark_mode: true,
+  notifications_enabled: false,
+};
 
 export const PLAN_LIMITS = {
   free: { passwords: 15 },
