@@ -63,7 +63,7 @@ export async function deriveKey(
   return crypto.subtle.deriveKey(
     {
       name: "PBKDF2",
-      salt,
+      salt: salt as BufferSource,
       iterations: PBKDF2_ITERATIONS,
       hash: "SHA-256",
     },
@@ -127,14 +127,14 @@ export async function encrypt(
   const iv = generateIV();
 
   const cipherBuffer = await crypto.subtle.encrypt(
-    { name: ALGORITHM, iv },
+    { name: ALGORITHM, iv: iv as BufferSource },
     key,
     encoder.encode(plaintext)
   );
 
   return {
     ciphertext: arrayBufferToBase64(cipherBuffer),
-    iv: arrayBufferToBase64(iv.buffer),
+    iv: arrayBufferToBase64(iv.buffer as ArrayBuffer),
   };
 }
 
@@ -171,7 +171,7 @@ export async function encryptWithPassphrase(
   const result = await encrypt(plaintext, key);
   return {
     ...result,
-    salt: arrayBufferToBase64(salt.buffer),
+    salt: arrayBufferToBase64(salt.buffer as ArrayBuffer),
   };
 }
 
