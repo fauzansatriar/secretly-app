@@ -17,9 +17,11 @@ import {
   Clock,
   Trash2,
   CheckCircle2,
-  XCircle,
   Download,
   AlertTriangle,
+  Pencil,
+  Check,
+  User,
 } from "lucide-react";
 import { useStore } from "@/lib/store";
 import {
@@ -48,22 +50,38 @@ export default function SettingsPage() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [exportStatus, setExportStatus] = useState<string | null>(null);
 
+  // Profile editing
+  const [editingName, setEditingName] = useState(false);
+  const [nameInput, setNameInput] = useState(settings.display_name);
+  const [nameSaved, setNameSaved] = useState(false);
+
   useEffect(() => {
     isBiometricAvailable().then(setBiometricSupported);
     setBiometricRegistered(isCredentialRegistered());
   }, []);
 
+  useEffect(() => {
+    setNameInput(settings.display_name);
+  }, [settings.display_name]);
+
+  // ─── Profile name save ───────────────────────────────────────────────────
+  function handleSaveName() {
+    const trimmed = nameInput.trim() || "Demo";
+    updateSettings({ display_name: trimmed });
+    setEditingName(false);
+    setNameSaved(true);
+    setTimeout(() => setNameSaved(false), 2000);
+  }
+
   // ─── Biometric toggle ────────────────────────────────────────────────────
   async function handleBiometricToggle() {
     if (settings.biometric_enabled) {
-      // Disable: verify first, then remove
       const ok = await authenticateWithBiometric();
       if (!ok) return;
       removeBiometricRegistration();
       updateSettings({ biometric_enabled: false });
       setBiometricRegistered(false);
     } else {
-      // Enable: register credential
       const registered = await registerBiometric();
       if (registered) {
         updateSettings({ biometric_enabled: true });
@@ -88,7 +106,6 @@ export default function SettingsPage() {
   // ─── Notifications toggle ────────────────────────────────────────────────
   async function handleNotificationsToggle() {
     if (!settings.notifications_enabled) {
-      // Request permission
       if ("Notification" in window) {
         const permission = await Notification.requestPermission();
         if (permission === "granted") {
@@ -103,21 +120,14 @@ export default function SettingsPage() {
 
   // ─── Export passwords ────────────────────────────────────────────────────
   async function handleExport() {
-    // Require biometric before export
     if (settings.biometric_enabled) {
       const ok = await authenticateWithBiometric();
       if (!ok) return;
     }
-
     const exportData = passwords.map((p) => ({
-      app: p.app_name,
-      username: p.username,
-      password: p.password,
-      url: p.url,
-      category: p.category,
-      notes: p.notes,
+      app: p.app_name, username: p.username, password: p.password,
+      url: p.url, category: p.category, notes: p.notes,
     }));
-
     const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -125,7 +135,6 @@ export default function SettingsPage() {
     a.download = `secretly-export-${new Date().toISOString().slice(0, 10)}.json`;
     a.click();
     URL.revokeObjectURL(url);
-
     setExportStatus("Exported!");
     setTimeout(() => setExportStatus(null), 2000);
   }
@@ -155,42 +164,74 @@ export default function SettingsPage() {
       {/* Header */}
       <div className="px-1 pt-2 pb-6">
         <h1 className="text-xl font-bold">Settings</h1>
-        <p className="text-xs text-muted-foreground mt-0.5">Manage security & preferences</p>
+        <p className="text-xs text-muted-foreground mt-0.5">Manage your account & preferences</p>
       </div>
 
-      {/* Profile card */}
-      <div className="mx-1 p-5 rounded-2xl bg-white/[0.02] border border-white/[0.05] mb-6 flex items-center gap-4">
-        <div className="w-14 h-14 rounded-full bg-cyan-glow/10 border border-cyan-glow/20 flex items-center justify-center">
-          <span className="text-lg font-bold text-cyan-glow">A</span>
+      {/* ─── Profile Card (editable name) ─── */}
+      <div className="mx-1 p-5 rounded-2xl surface-card mb-6">
+        <div className="flex items-center gap-4">
+          <div className="w-14 h-14 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center">
+            <span className="text-lg font-bold text-primary">
+              {(settings.display_name || "D")[0].toUpperCase()}
+            </span>
+          </div>
+          <div className="flex-1 min-w-0">
+            {editingName ? (
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  value={nameInput}
+                  onChange={(e) => setNameInput(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleSaveName()}
+                  autoFocus
+                  className="flex-1 px-3 py-1.5 rounded-lg text-sm font-semibold surface-input focus:outline-none focus:ring-2 focus:ring-ring/30 transition-all"
+                  placeholder="Your name"
+                />
+                <button
+                  onClick={handleSaveName}
+                  className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary active:scale-90 transition-transform"
+                >
+                  <Check className="w-4 h-4" />
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2">
+                <h2 className="font-semibold truncate">{settings.display_name}</h2>
+                <button
+                  onClick={() => setEditingName(true)}
+                  className="w-6 h-6 rounded flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <Pencil className="w-3 h-3" />
+                </button>
+                {nameSaved && (
+                  <span className="text-xs text-emerald-500 font-medium animate-in opacity-0">Saved!</span>
+                )}
+              </div>
+            )}
+            <p className="text-xs text-muted-foreground mt-0.5">Tap name to edit</p>
+          </div>
         </div>
-        <div className="flex-1">
-          <h2 className="font-semibold">Alex</h2>
-          <p className="text-xs text-muted-foreground">demo@secretly.app</p>
-        </div>
-
       </div>
 
       <div className="space-y-6 px-1">
         {/* ─── Security ─── */}
         <SettingsGroup title="Security">
-          {/* Biometric */}
           <SettingsToggle
             icon={ScanFace}
             label="Biometric Lock"
             description={biometricSupported ? (biometricRegistered ? "Face ID / Touch ID active" : "Tap to set up") : "Not supported on this device"}
-            color="text-cyan-glow"
+            color="text-primary"
             enabled={settings.biometric_enabled}
             onToggle={handleBiometricToggle}
             disabled={!biometricSupported}
           />
 
-          {/* Auto-lock */}
           <button onClick={() => setShowAutoLock(!showAutoLock)} className="w-full flex items-center gap-3 p-4">
-            <div className="w-8 h-8 rounded-lg bg-white/[0.03] flex items-center justify-center text-violet-400">
+            <div className="w-8 h-8 rounded-lg bg-violet-500/10 flex items-center justify-center text-violet-500">
               <Clock className="w-4 h-4" />
             </div>
             <div className="flex-1 text-left">
-              <span className="text-sm">Auto-lock</span>
+              <span className="text-sm font-medium">Auto-lock</span>
               <p className="text-[11px] text-muted-foreground">Lock after inactivity</p>
             </div>
             <span className="text-xs text-muted-foreground mr-1">{autoLockLabel}</span>
@@ -205,8 +246,8 @@ export default function SettingsPage() {
                   onClick={() => handleAutoLockChange(opt.value)}
                   className={`w-full text-left px-4 py-2.5 rounded-lg text-sm transition-colors ${
                     settings.auto_lock_seconds === opt.value
-                      ? "bg-cyan-glow/10 text-cyan-glow"
-                      : "text-muted-foreground hover:bg-white/[0.03]"
+                      ? "bg-primary/10 text-primary font-medium"
+                      : "text-muted-foreground hover:bg-secondary"
                   }`}
                 >
                   {opt.label}
@@ -223,7 +264,7 @@ export default function SettingsPage() {
             icon={settings.dark_mode ? Moon : Sun}
             label="Dark Mode"
             description={settings.dark_mode ? "Dark theme active" : "Light theme active"}
-            color="text-amber-400"
+            color="text-amber-500"
             enabled={settings.dark_mode}
             onToggle={handleThemeToggle}
           />
@@ -231,7 +272,7 @@ export default function SettingsPage() {
             icon={settings.notifications_enabled ? Bell : BellOff}
             label="Notifications"
             description={settings.notifications_enabled ? "Enabled" : "Disabled"}
-            color="text-rose-400"
+            color="text-rose-500"
             enabled={settings.notifications_enabled}
             onToggle={handleNotificationsToggle}
           />
@@ -240,31 +281,31 @@ export default function SettingsPage() {
         {/* ─── Data ─── */}
         <SettingsGroup title="Data">
           <button onClick={handleExport} className="w-full flex items-center gap-3 p-4">
-            <div className="w-8 h-8 rounded-lg bg-white/[0.03] flex items-center justify-center text-emerald-400">
+            <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-500">
               <Download className="w-4 h-4" />
             </div>
             <div className="flex-1 text-left">
-              <span className="text-sm">Export Passwords</span>
-              <p className="text-[11px] text-muted-foreground">Download as JSON (biometric required)</p>
+              <span className="text-sm font-medium">Export Passwords</span>
+              <p className="text-[11px] text-muted-foreground">Download as JSON</p>
             </div>
-            {exportStatus && <span className="text-xs text-emerald-400">{exportStatus}</span>}
+            {exportStatus && <span className="text-xs text-emerald-500 font-medium">{exportStatus}</span>}
             <ChevronRight className="w-4 h-4 text-muted-foreground/40" />
           </button>
         </SettingsGroup>
 
         {/* ─── About ─── */}
         <SettingsGroup title="About">
-          <SettingsRow icon={Shield} label="Encryption" value="AES-256-GCM" color="text-cyan-glow" />
-          <SettingsRow icon={Fingerprint} label="Auth" value="WebAuthn API" color="text-emerald-400" />
-          <SettingsRow icon={Info} label="Version" value="2.0.0" color="text-muted-foreground" />
-          <SettingsRow icon={Lock} label="Passwords" value={`${passwords.length} saved`} color="text-violet-400" />
+          <SettingsRow icon={Shield} label="Encryption" value="AES-256-GCM" color="text-primary" />
+          <SettingsRow icon={Fingerprint} label="Auth" value="WebAuthn API" color="text-emerald-500" />
+          <SettingsRow icon={Info} label="Version" value="2.1.0" color="text-muted-foreground" />
+          <SettingsRow icon={Lock} label="Passwords" value={`${passwords.length} saved`} color="text-violet-500" />
         </SettingsGroup>
 
         {/* ─── Danger Zone ─── */}
         <div className="space-y-3 pt-2">
           <button
             onClick={handleLockExit}
-            className="w-full p-4 rounded-2xl bg-white/[0.02] border border-white/[0.05] flex items-center gap-3 text-foreground active:scale-[0.98] transition-transform"
+            className="w-full p-4 rounded-2xl surface-card flex items-center gap-3 text-foreground active:scale-[0.98] transition-transform"
           >
             <LogOut className="w-5 h-5 text-muted-foreground" />
             <span className="text-sm font-medium">Lock & Exit</span>
@@ -272,7 +313,7 @@ export default function SettingsPage() {
 
           <button
             onClick={() => setShowDeleteConfirm(true)}
-            className="w-full p-4 rounded-2xl bg-rose-500/5 border border-rose-500/10 flex items-center gap-3 text-rose-400 active:scale-[0.98] transition-transform"
+            className="w-full p-4 rounded-2xl bg-destructive/5 border border-destructive/15 flex items-center gap-3 text-destructive active:scale-[0.98] transition-transform"
           >
             <Trash2 className="w-5 h-5" />
             <span className="text-sm font-medium">Delete All Data</span>
@@ -283,16 +324,16 @@ export default function SettingsPage() {
       {/* ─── Delete Confirm Modal ─── */}
       {showDeleteConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center px-6">
-          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setShowDeleteConfirm(false)} />
-          <div className="relative w-full max-w-sm bg-[hsl(222,44%,7%)] border border-white/[0.08] rounded-3xl p-6 text-center animate-in opacity-0">
-            <AlertTriangle className="w-10 h-10 text-rose-400 mx-auto mb-3" />
+          <div className="absolute inset-0 bg-black/50 dark:bg-black/70 backdrop-blur-sm" onClick={() => setShowDeleteConfirm(false)} />
+          <div className="relative w-full max-w-sm surface-elevated rounded-3xl p-6 text-center animate-in opacity-0">
+            <AlertTriangle className="w-10 h-10 text-destructive mx-auto mb-3" />
             <h3 className="font-bold text-lg mb-2">Delete Everything?</h3>
             <p className="text-sm text-muted-foreground mb-6">
               This will permanently erase all passwords, settings, and biometric data. This cannot be undone.
             </p>
             <div className="flex gap-3">
-              <button onClick={() => setShowDeleteConfirm(false)} className="flex-1 py-3 rounded-xl bg-white/[0.04] border border-white/[0.06] text-sm font-medium active:scale-[0.97] transition-transform">Cancel</button>
-              <button onClick={handleDeleteAll} className="flex-1 py-3 rounded-xl bg-rose-500 text-white text-sm font-semibold active:scale-[0.97] transition-transform">Delete All</button>
+              <button onClick={() => setShowDeleteConfirm(false)} className="flex-1 py-3 rounded-xl surface-card text-sm font-medium active:scale-[0.97] transition-transform">Cancel</button>
+              <button onClick={handleDeleteAll} className="flex-1 py-3 rounded-xl bg-destructive text-white text-sm font-semibold active:scale-[0.97] transition-transform">Delete All</button>
             </div>
           </div>
         </div>
@@ -306,8 +347,8 @@ export default function SettingsPage() {
 function SettingsGroup({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div>
-      <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-2 px-1">{title}</p>
-      <div className="rounded-2xl bg-white/[0.02] border border-white/[0.05] divide-y divide-white/[0.04] overflow-hidden">
+      <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-2 px-1 font-semibold">{title}</p>
+      <div className="rounded-2xl surface-card divide-y divide-border overflow-hidden">
         {children}
       </div>
     </div>
@@ -315,36 +356,25 @@ function SettingsGroup({ title, children }: { title: string; children: React.Rea
 }
 
 function SettingsToggle({
-  icon: Icon,
-  label,
-  description,
-  color,
-  enabled,
-  onToggle,
-  disabled,
+  icon: Icon, label, description, color, enabled, onToggle, disabled,
 }: {
-  icon: any;
-  label: string;
-  description?: string;
-  color: string;
-  enabled: boolean;
-  onToggle: () => void;
-  disabled?: boolean;
+  icon: any; label: string; description?: string; color: string;
+  enabled: boolean; onToggle: () => void; disabled?: boolean;
 }) {
   return (
     <div className="flex items-center gap-3 p-4">
-      <div className={`w-8 h-8 rounded-lg bg-white/[0.03] flex items-center justify-center ${color}`}>
+      <div className={`w-8 h-8 rounded-lg bg-secondary flex items-center justify-center ${color}`}>
         <Icon className="w-4 h-4" />
       </div>
       <div className="flex-1">
-        <span className="text-sm">{label}</span>
+        <span className="text-sm font-medium">{label}</span>
         {description && <p className="text-[11px] text-muted-foreground">{description}</p>}
       </div>
       <button
         onClick={onToggle}
         disabled={disabled}
         className={`w-11 h-6 rounded-full transition-colors relative ${
-          enabled ? "bg-cyan-glow" : "bg-white/[0.1]"
+          enabled ? "bg-primary" : "bg-border"
         } ${disabled ? "opacity-40 cursor-not-allowed" : "cursor-pointer"}`}
       >
         <div className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow-sm transition-transform ${enabled ? "left-[22px]" : "left-0.5"}`} />
@@ -356,10 +386,10 @@ function SettingsToggle({
 function SettingsRow({ icon: Icon, label, value, color }: { icon: any; label: string; value: string; color: string }) {
   return (
     <div className="flex items-center gap-3 p-4">
-      <div className={`w-8 h-8 rounded-lg bg-white/[0.03] flex items-center justify-center ${color}`}>
+      <div className={`w-8 h-8 rounded-lg bg-secondary flex items-center justify-center ${color}`}>
         <Icon className="w-4 h-4" />
       </div>
-      <span className="text-sm flex-1">{label}</span>
+      <span className="text-sm font-medium flex-1">{label}</span>
       <span className="text-xs text-muted-foreground">{value}</span>
     </div>
   );

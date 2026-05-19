@@ -118,12 +118,12 @@ export default function DashboardPage() {
       <div className="px-1 pt-2 pb-4">
         <div className="flex items-center justify-between mb-5">
           <div>
+            <p className="text-xs text-muted-foreground">Hi, {settings.display_name}</p>
             <h1 className="text-xl font-bold">Passwords</h1>
-            <p className="text-xs text-muted-foreground mt-0.5">{passwords.length} saved</p>
           </div>
           <button
             onClick={() => { setEditEntry(null); setShowForm(true); }}
-            className="w-10 h-10 rounded-xl bg-cyan-glow/10 border border-cyan-glow/20 flex items-center justify-center text-cyan-glow active:scale-95 transition-transform"
+            className="w-10 h-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary active:scale-95 transition-transform"
           >
             <Plus className="w-5 h-5" />
           </button>
@@ -137,7 +137,7 @@ export default function DashboardPage() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search apps..."
-            className="w-full pl-10 pr-4 py-3 rounded-xl bg-white/[0.03] border border-white/[0.06] text-sm placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-cyan-glow/30 transition-all"
+            className="w-full pl-10 pr-4 py-3 rounded-xl surface-input text-sm placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-ring/20 transition-all"
           />
         </div>
 
@@ -149,8 +149,8 @@ export default function DashboardPage() {
               onClick={() => setActiveCategory(cat.key)}
               className={`px-3.5 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all ${
                 activeCategory === cat.key
-                  ? "bg-cyan-glow/15 text-cyan-glow border border-cyan-glow/25"
-                  : "bg-white/[0.03] text-muted-foreground border border-white/[0.06]"
+                  ? "bg-primary/10 text-primary border border-primary/20"
+                  : "bg-secondary text-muted-foreground border border-border"
               }`}
             >
               {cat.label}
@@ -171,11 +171,11 @@ export default function DashboardPage() {
             <div
               key={entry.id}
               onClick={() => openDetail(entry)}
-              className="p-3.5 rounded-2xl bg-white/[0.02] border border-white/[0.05] active:bg-white/[0.04] transition-all flex items-center gap-3 cursor-pointer animate-in opacity-0"
+              className="p-3.5 rounded-2xl surface-card active:scale-[0.99] transition-all flex items-center gap-3 cursor-pointer animate-in opacity-0"
               style={{ animationDelay: `${Math.min(i * 40, 300)}ms` }}
             >
               {/* Icon */}
-              <div className="w-10 h-10 rounded-xl bg-white/[0.04] border border-white/[0.06] flex items-center justify-center shrink-0 overflow-hidden">
+              <div className="w-10 h-10 rounded-xl bg-secondary border border-border flex items-center justify-center shrink-0 overflow-hidden">
                 <img
                   src={entry.icon_url}
                   alt={entry.app_name}
@@ -194,15 +194,15 @@ export default function DashboardPage() {
               <div className="flex items-center gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
                 <button
                   onClick={() => handleReveal(entry.id)}
-                  className="w-8 h-8 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
+                  className="w-8 h-8 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
                 >
                   {revealedId === entry.id ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
                 </button>
                 <button
                   onClick={() => handleCopy(entry.password, entry.id)}
-                  className="w-8 h-8 rounded-lg flex items-center justify-center text-muted-foreground hover:text-cyan-glow transition-colors"
+                  className="w-8 h-8 rounded-lg flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors"
                 >
-                  {copiedId === entry.id ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                  {copiedId === entry.id ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
                 </button>
               </div>
             </div>
@@ -230,16 +230,16 @@ export default function DashboardPage() {
       {/* ═══ DETAIL SHEET ═══ */}
       {detailEntry && (
         <div className="fixed inset-0 z-50 flex items-end justify-center">
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setDetailEntry(null)} />
+          <div className="absolute inset-0 bg-black/40 dark:bg-black/60 backdrop-blur-sm" onClick={() => setDetailEntry(null)} />
           <div className="relative w-full max-w-lg animate-in opacity-0">
-            <div className="bg-[hsl(222,44%,7%)] border border-white/[0.06] rounded-t-3xl p-6 pb-10 safe-bottom">
-              <button onClick={() => setDetailEntry(null)} className="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/[0.05] flex items-center justify-center text-muted-foreground">
+            <div className="bg-card border border-border rounded-t-3xl p-6 pb-10 safe-bottom">
+              <button onClick={() => setDetailEntry(null)} className="absolute top-4 right-4 w-8 h-8 rounded-full bg-secondary flex items-center justify-center text-muted-foreground">
                 <X className="w-4 h-4" />
               </button>
 
               {/* Header */}
               <div className="flex items-center gap-3 mb-6">
-                <div className="w-14 h-14 rounded-2xl bg-white/[0.04] border border-white/[0.06] flex items-center justify-center overflow-hidden">
+                <div className="w-14 h-14 rounded-2xl bg-secondary border border-border flex items-center justify-center overflow-hidden">
                   <img src={detailEntry.icon_url} alt="" className="w-8 h-8 object-contain" />
                 </div>
                 <div>
@@ -254,13 +254,13 @@ export default function DashboardPage() {
                 <DetailField label="Username" value={detailEntry.username} onCopy={() => handleCopy(detailEntry.username, "detail-user")} copied={copiedId === "detail-user"} />
 
                 {/* Password — biometric gated */}
-                <div className="p-3.5 rounded-xl bg-white/[0.03] border border-white/[0.05]">
+                <div className="p-3.5 rounded-xl bg-secondary border border-border">
                   <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Password</p>
                   {detailUnlocked ? (
                     <div className="flex items-center justify-between">
-                      <code className="text-sm font-mono text-cyan-glow truncate flex-1">{detailEntry.password}</code>
-                      <button onClick={() => handleCopy(detailEntry.password, "detail-pass")} className="w-7 h-7 rounded-lg flex items-center justify-center text-muted-foreground hover:text-cyan-glow shrink-0 ml-2">
-                        {copiedId === "detail-pass" ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                      <code className="text-sm font-mono text-primary truncate flex-1">{detailEntry.password}</code>
+                      <button onClick={() => handleCopy(detailEntry.password, "detail-pass")} className="w-7 h-7 rounded-lg flex items-center justify-center text-muted-foreground hover:text-primary shrink-0 ml-2">
+                        {copiedId === "detail-pass" ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
                       </button>
                     </div>
                   ) : (
@@ -270,7 +270,7 @@ export default function DashboardPage() {
                         onClick={handleDetailUnlock}
                         disabled={scanning}
                         className={`px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-all ${
-                          scanning ? "bg-cyan-glow/10 text-cyan-glow animate-pulse" : "bg-cyan-glow/10 text-cyan-glow active:scale-95"
+                          scanning ? "bg-primary/10 text-primary animate-pulse" : "bg-primary/10 text-primary active:scale-95"
                         }`}
                       >
                         {scanning ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ScanFace className="w-3.5 h-3.5" />}
@@ -282,11 +282,11 @@ export default function DashboardPage() {
 
                 {/* URL */}
                 {detailEntry.url && (
-                  <div className="p-3.5 rounded-xl bg-white/[0.03] border border-white/[0.05]">
+                  <div className="p-3.5 rounded-xl bg-secondary border border-border">
                     <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Website</p>
                     <div className="flex items-center justify-between">
                       <p className="text-sm text-muted-foreground truncate">{detailEntry.url}</p>
-                      <a href={detailEntry.url} target="_blank" rel="noopener noreferrer" className="w-7 h-7 rounded-lg flex items-center justify-center text-muted-foreground hover:text-cyan-glow shrink-0">
+                      <a href={detailEntry.url} target="_blank" rel="noopener noreferrer" className="w-7 h-7 rounded-lg flex items-center justify-center text-muted-foreground hover:text-primary shrink-0">
                         <ExternalLink className="w-3.5 h-3.5" />
                       </a>
                     </div>
@@ -295,7 +295,7 @@ export default function DashboardPage() {
 
                 {/* Notes */}
                 {detailEntry.notes && (
-                  <div className="p-3.5 rounded-xl bg-white/[0.03] border border-white/[0.05]">
+                  <div className="p-3.5 rounded-xl bg-secondary border border-border">
                     <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Notes</p>
                     <p className="text-sm text-muted-foreground">{detailEntry.notes}</p>
                   </div>
@@ -306,13 +306,13 @@ export default function DashboardPage() {
               <div className="flex gap-3 mt-6">
                 <button
                   onClick={() => handleEdit(detailEntry)}
-                  className="flex-1 py-3 rounded-xl bg-white/[0.04] border border-white/[0.06] text-sm font-medium flex items-center justify-center gap-2 active:scale-[0.97] transition-transform"
+                  className="flex-1 py-3 rounded-xl surface-card text-sm font-medium flex items-center justify-center gap-2 active:scale-[0.97] transition-transform"
                 >
                   <Pencil className="w-4 h-4" /> Edit
                 </button>
                 <button
                   onClick={() => handleDelete(detailEntry.id)}
-                  className="flex-1 py-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-sm font-medium flex items-center justify-center gap-2 active:scale-[0.97] transition-transform"
+                  className="flex-1 py-3 rounded-xl bg-destructive/10 border border-destructive/20 text-destructive text-sm font-medium flex items-center justify-center gap-2 active:scale-[0.97] transition-transform"
                 >
                   <Trash2 className="w-4 h-4" /> Delete
                 </button>
@@ -328,12 +328,12 @@ export default function DashboardPage() {
 // ─── Detail Field ────────────────────────────────────────────────────────────
 function DetailField({ label, value, onCopy, copied }: { label: string; value: string; onCopy: () => void; copied: boolean }) {
   return (
-    <div className="p-3.5 rounded-xl bg-white/[0.03] border border-white/[0.05]">
+    <div className="p-3.5 rounded-xl bg-secondary border border-border">
       <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">{label}</p>
       <div className="flex items-center justify-between">
         <p className="text-sm font-medium truncate">{value}</p>
-        <button onClick={onCopy} className="w-7 h-7 rounded-lg flex items-center justify-center text-muted-foreground hover:text-cyan-glow shrink-0 ml-2">
-          {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+        <button onClick={onCopy} className="w-7 h-7 rounded-lg flex items-center justify-center text-muted-foreground hover:text-primary shrink-0 ml-2">
+          {copied ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
         </button>
       </div>
     </div>
@@ -378,12 +378,12 @@ function PasswordForm({
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center">
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
+      <div className="absolute inset-0 bg-black/40 dark:bg-black/60 backdrop-blur-sm" onClick={onClose} />
       <div className="relative w-full max-w-lg animate-in opacity-0">
-        <div className="bg-[hsl(222,44%,7%)] border border-white/[0.06] rounded-t-3xl p-6 pb-8 safe-bottom max-h-[85vh] overflow-y-auto">
+        <div className="bg-card border border-border rounded-t-3xl p-6 pb-8 safe-bottom max-h-[85vh] overflow-y-auto">
           <div className="flex items-center justify-between mb-5">
             <h2 className="text-lg font-bold">{entry ? "Edit Password" : "Add Password"}</h2>
-            <button onClick={onClose} className="w-8 h-8 rounded-full bg-white/[0.05] flex items-center justify-center text-muted-foreground">
+            <button onClick={onClose} className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center text-muted-foreground">
               <X className="w-4 h-4" />
             </button>
           </div>
@@ -393,7 +393,7 @@ function PasswordForm({
             <FormField label="Username / Email *" value={username} onChange={setUsername} placeholder="your@email.com" />
 
             <div>
-              <label className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1.5 block">Password *</label>
+              <label className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1.5 block font-semibold">Password *</label>
               <div className="relative">
                 <input
                   type={showPass ? "text" : "password"}
@@ -401,7 +401,7 @@ function PasswordForm({
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
                   required
-                  className="w-full px-4 py-3 pr-10 rounded-xl bg-white/[0.03] border border-white/[0.06] text-sm placeholder:text-muted-foreground/40 focus:outline-none focus:ring-2 focus:ring-cyan-glow/30 transition-all"
+                  className="w-full px-4 py-3 pr-10 rounded-xl surface-input text-sm placeholder:text-muted-foreground/40 focus:outline-none focus:ring-2 focus:ring-ring/20 transition-all"
                 />
                 <button type="button" onClick={() => setShowPass(!showPass)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">
                   {showPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -412,11 +412,11 @@ function PasswordForm({
             <FormField label="URL" value={url} onChange={setUrl} placeholder="https://..." />
 
             <div>
-              <label className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1.5 block">Category</label>
+              <label className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1.5 block font-semibold">Category</label>
               <select
                 value={category}
                 onChange={(e) => setCategory(e.target.value as PasswordCategory)}
-                className="w-full px-4 py-3 rounded-xl bg-white/[0.03] border border-white/[0.06] text-sm focus:outline-none focus:ring-2 focus:ring-cyan-glow/30 transition-all appearance-none"
+                className="w-full px-4 py-3 rounded-xl surface-input text-sm focus:outline-none focus:ring-2 focus:ring-ring/20 transition-all appearance-none"
               >
                 {CATEGORIES.filter((c) => c.key !== "all").map((c) => (
                   <option key={c.key} value={c.key}>{c.label}</option>
@@ -428,7 +428,7 @@ function PasswordForm({
 
             <button
               type="submit"
-              className="w-full py-3.5 rounded-xl bg-cyan-glow text-navy-950 font-semibold text-sm active:scale-[0.97] transition-transform shadow-glow mt-2"
+              className="w-full py-3.5 rounded-xl bg-primary text-primary-foreground font-semibold text-sm active:scale-[0.97] transition-transform shadow-sm mt-2"
             >
               {entry ? "Save Changes" : "Add Password"}
             </button>
@@ -442,13 +442,13 @@ function PasswordForm({
 function FormField({ label, value, onChange, placeholder }: { label: string; value: string; onChange: (v: string) => void; placeholder: string }) {
   return (
     <div>
-      <label className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1.5 block">{label}</label>
+      <label className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1.5 block font-semibold">{label}</label>
       <input
         type="text"
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="w-full px-4 py-3 rounded-xl bg-white/[0.03] border border-white/[0.06] text-sm placeholder:text-muted-foreground/40 focus:outline-none focus:ring-2 focus:ring-cyan-glow/30 transition-all"
+        className="w-full px-4 py-3 rounded-xl surface-input text-sm placeholder:text-muted-foreground/40 focus:outline-none focus:ring-2 focus:ring-ring/20 transition-all"
       />
     </div>
   );

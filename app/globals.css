@@ -3,37 +3,39 @@
 @tailwind utilities;
 
 @layer base {
-  /* ─── Light Mode ─── */
+  /* ─── Light Mode — Professional contrast ─── */
   :root {
-    --background: 220 20% 97%;
-    --foreground: 222 47% 11%;
+    --background: 0 0% 98%;
+    --foreground: 224 71% 4%;
 
     --card: 0 0% 100%;
-    --card-foreground: 222 47% 11%;
+    --card-foreground: 224 71% 4%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 11%;
+    --popover-foreground: 224 71% 4%;
 
-    --primary: 199 89% 48%;
+    --primary: 220 91% 54%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 220 14% 92%;
-    --secondary-foreground: 222 47% 11%;
+    --secondary: 220 14% 96%;
+    --secondary-foreground: 224 71% 4%;
 
-    --muted: 220 14% 92%;
-    --muted-foreground: 220 9% 46%;
+    --muted: 220 14% 96%;
+    --muted-foreground: 220 9% 43%;
 
-    --accent: 220 14% 89%;
-    --accent-foreground: 222 47% 11%;
+    --accent: 220 14% 93%;
+    --accent-foreground: 224 71% 4%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 220 13% 87%;
-    --input: 220 13% 87%;
-    --ring: 199 89% 48%;
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 220 91% 54%;
 
     --radius: 0.75rem;
+
+    --shadow-card: 0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.03);
   }
 
   /* ─── Dark Mode ─── */
@@ -65,6 +67,8 @@
     --border: 222 30% 14%;
     --input: 222 30% 14%;
     --ring: 187 92% 69%;
+
+    --shadow-card: 0 2px 8px rgba(0,0,0,0.3);
   }
 }
 
@@ -87,7 +91,6 @@
     -moz-osx-font-smoothing: grayscale;
   }
 
-  /* Hide scrollbar but keep scroll */
   .scrollbar-hide {
     -ms-overflow-style: none;
     scrollbar-width: none;
@@ -106,11 +109,10 @@
   }
 
   ::-webkit-scrollbar-thumb {
-    background: hsl(222 30% 18%);
+    background: hsl(var(--border));
     border-radius: 2px;
   }
 
-  /* Safe area padding for mobile notch/home indicator */
   .safe-bottom {
     padding-bottom: env(safe-area-inset-bottom, 16px);
   }
@@ -121,31 +123,65 @@
 }
 
 @layer utilities {
+  /* Card surface — works in both themes */
+  .surface-card {
+    background: hsl(var(--card));
+    border: 1px solid hsl(var(--border));
+    box-shadow: var(--shadow-card);
+  }
+
+  .surface-elevated {
+    background: hsl(var(--card));
+    border: 1px solid hsl(var(--border));
+    box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+  }
+  :is(.dark) .surface-elevated {
+    box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+  }
+
+  .surface-input {
+    background: hsl(var(--secondary));
+    border: 1px solid hsl(var(--border));
+  }
+  .surface-input:focus {
+    border-color: hsl(var(--ring));
+    box-shadow: 0 0 0 3px hsl(var(--ring) / 0.1);
+  }
+
   .glass {
-    @apply backdrop-blur-xl border shadow-sm;
-    background: hsl(var(--card) / 0.6);
+    @apply backdrop-blur-xl border;
+    background: hsl(var(--card) / 0.85);
     border-color: hsl(var(--border));
+    box-shadow: var(--shadow-card);
   }
   :is(.dark) .glass {
     background: rgba(255,255,255,0.02);
     border-color: rgba(255,255,255,0.05);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
   }
 
   .glass-hover {
-    @apply hover:border-black/[0.1] transition-all duration-300;
+    @apply transition-all duration-200;
   }
-  :is(.dark) .glass-hover {
-    @apply hover:bg-white/[0.05] hover:border-white/[0.1];
+  .glass-hover:hover {
+    border-color: hsl(var(--ring) / 0.3);
+    box-shadow: 0 2px 12px hsl(var(--ring) / 0.08);
+  }
+  :is(.dark) .glass-hover:hover {
+    background: rgba(255,255,255,0.04);
+    border-color: rgba(255,255,255,0.1);
   }
 
   .glass-strong {
-    @apply backdrop-blur-2xl border shadow-sm;
-    background: hsl(var(--card) / 0.8);
+    @apply backdrop-blur-2xl border;
+    background: hsl(var(--card));
     border-color: hsl(var(--border));
+    box-shadow: var(--shadow-card);
   }
   :is(.dark) .glass-strong {
     background: rgba(255,255,255,0.04);
     border-color: rgba(255,255,255,0.08);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.4);
   }
 
   .glow-border {

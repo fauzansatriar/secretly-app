@@ -110,12 +110,12 @@ export default function VaultSearchPage() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Find a password..."
-            className="w-full pl-10 pr-10 py-3.5 rounded-xl bg-white/[0.03] border border-white/[0.06] text-sm placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-cyan-glow/30 transition-all"
+            className="w-full pl-10 pr-10 py-3.5 rounded-xl surface-input text-sm placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-ring/20 transition-all"
           />
           {search && (
             <button
               onClick={() => setSearch("")}
-              className="absolute right-3 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-white/[0.06] flex items-center justify-center text-muted-foreground"
+              className="absolute right-3 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-secondary flex items-center justify-center text-muted-foreground"
             >
               <X className="w-3 h-3" />
             </button>
@@ -140,10 +140,10 @@ export default function VaultSearchPage() {
             <button
               key={entry.id}
               onClick={() => handleSelectEntry(entry)}
-              className="w-full p-3.5 rounded-2xl bg-white/[0.02] border border-white/[0.05] active:bg-white/[0.05] transition-all text-left flex items-center gap-3 animate-in opacity-0"
+              className="w-full p-3.5 rounded-2xl surface-card active:scale-[0.99] transition-all text-left flex items-center gap-3 animate-in opacity-0"
               style={{ animationDelay: `${Math.min(i * 40, 250)}ms` }}
             >
-              <div className="w-10 h-10 rounded-xl bg-white/[0.04] border border-white/[0.06] flex items-center justify-center shrink-0 overflow-hidden">
+              <div className="w-10 h-10 rounded-xl bg-secondary border border-border flex items-center justify-center shrink-0 overflow-hidden">
                 <img src={entry.icon_url} alt={entry.app_name} className="w-6 h-6 object-contain" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
               </div>
               <div className="flex-1 min-w-0">
@@ -159,16 +159,16 @@ export default function VaultSearchPage() {
       {/* ═══ DETAIL BOTTOM SHEET ═══ */}
       {selectedEntry && (
         <div className="fixed inset-0 z-50 flex items-end justify-center">
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setSelectedEntry(null)} />
+          <div className="absolute inset-0 bg-black/40 dark:bg-black/60 backdrop-blur-sm" onClick={() => setSelectedEntry(null)} />
           <div className="relative w-full max-w-lg animate-in opacity-0">
-            <div className="bg-[hsl(222,44%,7%)] border border-white/[0.06] rounded-t-3xl p-6 pb-10 safe-bottom max-h-[80vh] overflow-y-auto">
-              <button onClick={() => setSelectedEntry(null)} className="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/[0.05] flex items-center justify-center text-muted-foreground">
+            <div className="bg-card border border-border rounded-t-3xl p-6 pb-10 safe-bottom max-h-[80vh] overflow-y-auto">
+              <button onClick={() => setSelectedEntry(null)} className="absolute top-4 right-4 w-8 h-8 rounded-full bg-secondary flex items-center justify-center text-muted-foreground">
                 <X className="w-4 h-4" />
               </button>
 
               {/* App header */}
               <div className="flex items-center gap-3 mb-6">
-                <div className="w-14 h-14 rounded-2xl bg-white/[0.04] border border-white/[0.06] flex items-center justify-center overflow-hidden">
+                <div className="w-14 h-14 rounded-2xl bg-secondary border border-border flex items-center justify-center overflow-hidden">
                   <img src={selectedEntry.icon_url} alt="" className="w-8 h-8 object-contain" />
                 </div>
                 <div>
@@ -182,43 +182,43 @@ export default function VaultSearchPage() {
                 <div className="space-y-4">
                   <div>
                     <label className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1 block">Username</label>
-                    <input value={editUsername} onChange={(e) => setEditUsername(e.target.value)} className="w-full px-4 py-3 rounded-xl bg-white/[0.03] border border-white/[0.06] text-sm focus:outline-none focus:ring-2 focus:ring-cyan-glow/30 transition-all" />
+                    <input value={editUsername} onChange={(e) => setEditUsername(e.target.value)} className="w-full px-4 py-3 rounded-xl surface-input text-sm focus:outline-none focus:ring-2 focus:ring-ring/20 transition-all" />
                   </div>
                   <div>
                     <label className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1 block">Password</label>
-                    <input value={editPassword} onChange={(e) => setEditPassword(e.target.value)} className="w-full px-4 py-3 rounded-xl bg-white/[0.03] border border-white/[0.06] text-sm font-mono focus:outline-none focus:ring-2 focus:ring-cyan-glow/30 transition-all" />
+                    <input value={editPassword} onChange={(e) => setEditPassword(e.target.value)} className="w-full px-4 py-3 rounded-xl surface-input text-sm font-mono focus:outline-none focus:ring-2 focus:ring-ring/20 transition-all" />
                   </div>
                   <div>
                     <label className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1 block">Notes</label>
-                    <input value={editNotes} onChange={(e) => setEditNotes(e.target.value)} placeholder="Optional" className="w-full px-4 py-3 rounded-xl bg-white/[0.03] border border-white/[0.06] text-sm placeholder:text-muted-foreground/40 focus:outline-none focus:ring-2 focus:ring-cyan-glow/30 transition-all" />
+                    <input value={editNotes} onChange={(e) => setEditNotes(e.target.value)} placeholder="Optional" className="w-full px-4 py-3 rounded-xl surface-input text-sm placeholder:text-muted-foreground/40 focus:outline-none focus:ring-2 focus:ring-ring/20 transition-all" />
                   </div>
                   <div className="flex gap-3 pt-2">
-                    <button onClick={() => setEditMode(false)} className="flex-1 py-3 rounded-xl bg-white/[0.04] border border-white/[0.06] text-sm font-medium active:scale-[0.97] transition-transform">Cancel</button>
-                    <button onClick={handleSaveEdit} className="flex-1 py-3 rounded-xl bg-cyan-glow text-navy-950 text-sm font-semibold active:scale-[0.97] transition-transform shadow-glow">Save</button>
+                    <button onClick={() => setEditMode(false)} className="flex-1 py-3 rounded-xl surface-card text-sm font-medium active:scale-[0.97] transition-transform">Cancel</button>
+                    <button onClick={handleSaveEdit} className="flex-1 py-3 rounded-xl bg-primary text-primary-foreground text-sm font-semibold active:scale-[0.97] transition-transform shadow-sm">Save</button>
                   </div>
                 </div>
               ) : (
                 /* ─── VIEW MODE ─── */
                 <div className="space-y-3">
                   {/* Username */}
-                  <div className="p-3.5 rounded-xl bg-white/[0.03] border border-white/[0.05]">
+                  <div className="p-3.5 rounded-xl bg-secondary border border-border">
                     <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Username</p>
                     <div className="flex items-center justify-between">
                       <p className="text-sm font-medium truncate">{selectedEntry.username}</p>
-                      <button onClick={() => handleCopy(selectedEntry.username, "s-user")} className="w-7 h-7 rounded-lg flex items-center justify-center text-muted-foreground hover:text-cyan-glow shrink-0">
-                        {copiedField === "s-user" ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                      <button onClick={() => handleCopy(selectedEntry.username, "s-user")} className="w-7 h-7 rounded-lg flex items-center justify-center text-muted-foreground hover:text-primary shrink-0">
+                        {copiedField === "s-user" ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
                       </button>
                     </div>
                   </div>
 
                   {/* Password — biometric gated */}
-                  <div className="p-3.5 rounded-xl bg-white/[0.03] border border-white/[0.05]">
+                  <div className="p-3.5 rounded-xl bg-secondary border border-border">
                     <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Password</p>
                     {unlocked ? (
                       <div className="flex items-center justify-between">
-                        <code className="text-sm font-mono text-cyan-glow truncate flex-1">{selectedEntry.password}</code>
-                        <button onClick={() => handleCopy(selectedEntry.password, "s-pass")} className="w-7 h-7 rounded-lg flex items-center justify-center text-muted-foreground hover:text-cyan-glow shrink-0 ml-2">
-                          {copiedField === "s-pass" ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                        <code className="text-sm font-mono text-primary truncate flex-1">{selectedEntry.password}</code>
+                        <button onClick={() => handleCopy(selectedEntry.password, "s-pass")} className="w-7 h-7 rounded-lg flex items-center justify-center text-muted-foreground hover:text-primary shrink-0 ml-2">
+                          {copiedField === "s-pass" ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
                         </button>
                       </div>
                     ) : (
@@ -227,7 +227,7 @@ export default function VaultSearchPage() {
                         <button
                           onClick={handleFaceUnlock}
                           disabled={scanning}
-                          className={`px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-all ${scanning ? "bg-cyan-glow/10 text-cyan-glow animate-pulse" : "bg-cyan-glow/10 text-cyan-glow active:scale-95"}`}
+                          className={`px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-all ${scanning ? "bg-primary/10 text-primary animate-pulse" : "bg-primary/10 text-primary active:scale-95"}`}
                         >
                           {scanning ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ScanFace className="w-3.5 h-3.5" />}
                           {scanning ? "Verifying..." : "Unlock"}
@@ -238,11 +238,11 @@ export default function VaultSearchPage() {
 
                   {/* URL */}
                   {selectedEntry.url && (
-                    <div className="p-3.5 rounded-xl bg-white/[0.03] border border-white/[0.05]">
+                    <div className="p-3.5 rounded-xl bg-secondary border border-border">
                       <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Website</p>
                       <div className="flex items-center justify-between">
                         <p className="text-sm text-muted-foreground truncate">{selectedEntry.url}</p>
-                        <a href={selectedEntry.url} target="_blank" rel="noopener noreferrer" className="w-7 h-7 rounded-lg flex items-center justify-center text-muted-foreground hover:text-cyan-glow shrink-0">
+                        <a href={selectedEntry.url} target="_blank" rel="noopener noreferrer" className="w-7 h-7 rounded-lg flex items-center justify-center text-muted-foreground hover:text-primary shrink-0">
                           <ExternalLink className="w-3.5 h-3.5" />
                         </a>
                       </div>
@@ -251,7 +251,7 @@ export default function VaultSearchPage() {
 
                   {/* Notes */}
                   {selectedEntry.notes && (
-                    <div className="p-3.5 rounded-xl bg-white/[0.03] border border-white/[0.05]">
+                    <div className="p-3.5 rounded-xl bg-secondary border border-border">
                       <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Notes</p>
                       <p className="text-sm text-muted-foreground">{selectedEntry.notes}</p>
                     </div>
@@ -259,10 +259,10 @@ export default function VaultSearchPage() {
 
                   {/* Actions */}
                   <div className="flex gap-3 mt-4">
-                    <button onClick={() => setEditMode(true)} className="flex-1 py-3 rounded-xl bg-white/[0.04] border border-white/[0.06] text-sm font-medium flex items-center justify-center gap-2 active:scale-[0.97] transition-transform">
+                    <button onClick={() => setEditMode(true)} className="flex-1 py-3 rounded-xl surface-card text-sm font-medium flex items-center justify-center gap-2 active:scale-[0.97] transition-transform">
                       <Pencil className="w-4 h-4" /> Edit
                     </button>
-                    <button onClick={handleDelete} className="flex-1 py-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-sm font-medium flex items-center justify-center gap-2 active:scale-[0.97] transition-transform">
+                    <button onClick={handleDelete} className="flex-1 py-3 rounded-xl bg-destructive/10 border border-destructive/20 text-destructive text-sm font-medium flex items-center justify-center gap-2 active:scale-[0.97] transition-transform">
                       <Trash2 className="w-4 h-4" /> Delete
                     </button>
                   </div>

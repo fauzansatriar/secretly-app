@@ -36,6 +36,7 @@ export interface AppSettings {
   auto_lock_seconds: number;
   dark_mode: boolean;
   notifications_enabled: boolean;
+  display_name: string;
 }
 
 export const DEFAULT_SETTINGS: AppSettings = {
@@ -43,6 +44,5 @@ export const DEFAULT_SETTINGS: AppSettings = {
   auto_lock_seconds: 60,
   dark_mode: true,
   notifications_enabled: false,
+  display_name: "Demo",
 };
-
-
