@@ -1,532 +1,242 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState } from "react";
 import {
-  Plus,
-  Lock,
-  FileText,
-  CreditCard,
-  Key,
-  Film,
-  Package,
   Search,
-  Trash2,
-  Pencil,
+  Plus,
+  Copy,
   Eye,
   EyeOff,
-  Loader2,
+  Check,
+  ExternalLink,
+  ScanFace,
+  Trash2,
+  Pencil,
+  X,
+  Lock,
 } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
-import { encrypt, decrypt, getSessionKey, generateKey, storeSessionKey } from "@/lib/crypto/encryption";
-import { isDemoMode, DEMO_VAULT_ITEMS } from "@/lib/demo-data";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Select } from "@/components/ui/select";
-import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import type { VaultItem, VaultCategory, DecryptedVaultItem } from "@/lib/types";
-import { formatDate } from "@/lib/utils";
-
-const categoryIcons: Record<VaultCategory, React.ComponentType<{ className?: string }>> = {
-  note: FileText,
-  password: Key,
-  document: FileText,
-  media: Film,
-  financial: CreditCard,
-  other: Package,
-};
-
-const categoryLabels: Record<VaultCategory, string> = {
-  note: "Note",
-  password: "Password",
-  document: "Document",
-  media: "Media",
-  financial: "Financial",
-  other: "Other",
-};
+import { DEMO_PASSWORDS } from "@/lib/demo-data";
+import type { PasswordEntry } from "@/lib/types";
 
 export default function VaultPage() {
-  const [items, setItems] = useState<DecryptedVaultItem[]>([]);
-  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState<string>("all");
-  const [showCreate, setShowCreate] = useState(false);
-  const [editItem, setEditItem] = useState<DecryptedVaultItem | null>(null);
-  const [viewItem, setViewItem] = useState<DecryptedVaultItem | null>(null);
-  const [showContent, setShowContent] = useState(false);
-  const [isDemo, setIsDemo] = useState(false);
+  const [selectedEntry, setSelectedEntry] = useState<PasswordEntry | null>(null);
+  const [unlocked, setUnlocked] = useState(false);
+  const [scanning, setScanning] = useState(false);
+  const [copiedField, setCopiedField] = useState<string | null>(null);
 
-  const loadItems = useCallback(async () => {
-    setLoading(true);
+  const passwords = DEMO_PASSWORDS;
 
-    // Check demo mode
-    if (isDemoMode()) {
-      setIsDemo(true);
-      setItems(DEMO_VAULT_ITEMS);
-      setLoading(false);
-      return;
-    }
+  const filtered = passwords.filter(
+    (p) =>
+      p.app_name.toLowerCase().includes(search.toLowerCase()) ||
+      p.username.toLowerCase().includes(search.toLowerCase())
+  );
 
-    const supabase = createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
+  async function handleCopy(text: string, field: string) {
+    await navigator.clipboard.writeText(text);
+    setCopiedField(field);
+    setTimeout(() => setCopiedField(null), 1500);
+  }
 
-    const { data } = await supabase
-      .from("vault_items")
-      .select("*")
-      .eq("user_id", user.id)
-      .order("updated_at", { ascending: false });
+  async function handleFaceUnlock() {
+    setScanning(true);
+    await new Promise((r) => setTimeout(r, 1800));
+    setUnlocked(true);
+    setScanning(false);
+  }
 
-    if (!data) {
-      setLoading(false);
-      return;
-    }
-
-    // Get or create encryption key
-    let key = await getSessionKey();
-    if (!key) {
-      key = await generateKey();
-      await storeSessionKey(key);
-    }
-
-    // Decrypt items
-    const decrypted: DecryptedVaultItem[] = [];
-    for (const item of data as VaultItem[]) {
-      try {
-        const title = await decrypt(item.title, item.iv, key);
-        const content = await decrypt(item.content, item.iv, key);
-        decrypted.push({ ...item, title, content });
-      } catch {
-        decrypted.push({
-          ...item,
-          title: "[Encrypted - wrong key]",
-          content: "[Unable to decrypt]",
-        });
-      }
-    }
-
-    setItems(decrypted);
-    setLoading(false);
-  }, []);
-
-  useEffect(() => {
-    loadItems();
-  }, [loadItems]);
-
-  const filtered = items.filter((item) => {
-    const matchesSearch =
-      item.title.toLowerCase().includes(search.toLowerCase()) ||
-      item.content.toLowerCase().includes(search.toLowerCase());
-    const matchesCategory =
-      categoryFilter === "all" || item.category === categoryFilter;
-    return matchesSearch && matchesCategory;
-  });
+  function handleSelectEntry(entry: PasswordEntry) {
+    setSelectedEntry(entry);
+    setUnlocked(false);
+  }
 
   return (
-    <div className="space-y-6 max-w-6xl">
+    <div className="flex flex-col min-h-[calc(100vh-80px)] max-w-lg mx-auto">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
-            <Lock className="w-6 h-6 text-cyan-glow" />
-            Vault
-          </h1>
-          <p className="text-muted-foreground text-sm mt-1">
-            {isDemo
-              ? "Sample encrypted secrets. Sign up to store your own."
-              : "Your encrypted secrets. Only you can see them."}
-          </p>
-        </div>
-        <Button onClick={() => setShowCreate(true)} className="gap-2">
-          <Plus className="w-4 h-4" />
-          Add Item
-        </Button>
-      </div>
+      <div className="px-1 pt-2 pb-4">
+        <h1 className="text-xl font-bold mb-4">Search Vault</h1>
 
-      {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-3">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input
-            placeholder="Search vault..."
+        {/* Search */}
+        <div className="relative">
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <input
+            type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="pl-9"
+            placeholder="Find a password..."
+            autoFocus
+            className="w-full pl-10 pr-4 py-3.5 rounded-xl bg-white/[0.03] border border-white/[0.06] text-sm placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-cyan-glow/30 focus:border-cyan-glow/30 transition-all"
           />
         </div>
-        <Select
-          value={categoryFilter}
-          onChange={(e) => setCategoryFilter(e.target.value)}
-          className="w-full sm:w-40"
-        >
-          <option value="all">All Types</option>
-          {Object.entries(categoryLabels).map(([value, label]) => (
-            <option key={value} value={value}>
-              {label}
-            </option>
-          ))}
-        </Select>
       </div>
 
-      {/* Items Grid */}
-      {loading ? (
-        <div className="flex items-center justify-center py-20">
-          <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
-        </div>
-      ) : filtered.length === 0 ? (
-        <Card className="text-center py-16">
-          <CardContent>
-            <Lock className="w-10 h-10 text-muted-foreground/30 mx-auto mb-3" />
-            <p className="text-muted-foreground">
-              {items.length === 0
-                ? "Your vault is empty. Add your first secret."
-                : "No items match your search."}
+      {/* Results */}
+      <div className="flex-1 space-y-2 px-1 pb-6">
+        {search.length === 0 ? (
+          <div className="text-center py-16">
+            <Search className="w-10 h-10 text-muted-foreground/20 mx-auto mb-3" />
+            <p className="text-sm text-muted-foreground">Type to search your passwords</p>
+            <p className="text-xs text-muted-foreground/60 mt-1">
+              {passwords.length} accounts saved
             </p>
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filtered.map((item) => {
-            const Icon = categoryIcons[item.category];
-            return (
-              <Card
-                key={item.id}
-                className="group cursor-pointer hover:border-white/[0.1] transition-all"
-                onClick={() => {
-                  setViewItem(item);
-                  setShowContent(false);
-                }}
+          </div>
+        ) : filtered.length === 0 ? (
+          <div className="text-center py-16">
+            <p className="text-sm text-muted-foreground">No results for &ldquo;{search}&rdquo;</p>
+          </div>
+        ) : (
+          filtered.map((entry, i) => (
+            <button
+              key={entry.id}
+              onClick={() => handleSelectEntry(entry)}
+              className="w-full p-4 rounded-2xl bg-white/[0.02] border border-white/[0.05] hover:bg-white/[0.04] hover:border-white/[0.08] transition-all text-left flex items-center gap-3 animate-in opacity-0"
+              style={{ animationDelay: `${Math.min(i * 40, 300)}ms` }}
+            >
+              <div
+                className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0"
+                style={{ backgroundColor: `${entry.icon_color}15` }}
               >
-                <CardContent>
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="w-9 h-9 rounded-xl bg-cyan-glow/10 flex items-center justify-center text-cyan-glow">
-                      <Icon className="w-4 h-4" />
-                    </div>
-                    <Badge variant="secondary">
-                      {categoryLabels[item.category]}
-                    </Badge>
+                <span className="text-lg font-bold" style={{ color: entry.icon_color }}>
+                  {entry.app_name[0]}
+                </span>
+              </div>
+              <div className="flex-1 min-w-0">
+                <h3 className="text-sm font-semibold truncate">{entry.app_name}</h3>
+                <p className="text-xs text-muted-foreground truncate">{entry.username}</p>
+              </div>
+              <Lock className="w-4 h-4 text-muted-foreground/40 shrink-0" />
+            </button>
+          ))
+        )}
+      </div>
+
+      {/* Detail sheet (bottom modal) */}
+      {selectedEntry && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center">
+          {/* Backdrop */}
+          <div
+            className="absolute inset-0 bg-navy-950/80 backdrop-blur-sm"
+            onClick={() => setSelectedEntry(null)}
+          />
+
+          {/* Sheet */}
+          <div className="relative w-full max-w-lg mx-auto animate-in opacity-0">
+            <div className="bg-[hsl(222,44%,7%)] border border-white/[0.06] rounded-t-3xl p-6 pb-10">
+              {/* Close */}
+              <button
+                onClick={() => setSelectedEntry(null)}
+                className="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/[0.05] flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+
+              {/* App header */}
+              <div className="flex items-center gap-3 mb-6">
+                <div
+                  className="w-14 h-14 rounded-2xl flex items-center justify-center"
+                  style={{ backgroundColor: `${selectedEntry.icon_color}15` }}
+                >
+                  <span
+                    className="text-2xl font-bold"
+                    style={{ color: selectedEntry.icon_color }}
+                  >
+                    {selectedEntry.app_name[0]}
+                  </span>
+                </div>
+                <div>
+                  <h2 className="text-lg font-bold">{selectedEntry.app_name}</h2>
+                  <p className="text-xs text-muted-foreground">{selectedEntry.category}</p>
+                </div>
+              </div>
+
+              {/* Username field */}
+              <div className="space-y-3">
+                <div className="p-3.5 rounded-xl bg-white/[0.03] border border-white/[0.05]">
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Username</p>
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm font-medium truncate">{selectedEntry.username}</p>
+                    <button
+                      onClick={() => handleCopy(selectedEntry.username, "user")}
+                      className="w-7 h-7 rounded-lg flex items-center justify-center text-muted-foreground hover:text-cyan-glow hover:bg-cyan-glow/10 transition-colors shrink-0"
+                    >
+                      {copiedField === "user" ? (
+                        <Check className="w-3.5 h-3.5 text-emerald-400" />
+                      ) : (
+                        <Copy className="w-3.5 h-3.5" />
+                      )}
+                    </button>
                   </div>
-                  <h3 className="font-semibold truncate">{item.title}</h3>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Updated {formatDate(item.updated_at)}
-                  </p>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
-      )}
+                </div>
 
-      {/* Create Dialog */}
-      <VaultItemDialog
-        open={showCreate}
-        onOpenChange={setShowCreate}
-        onSuccess={loadItems}
-        mode="create"
-        isDemo={isDemo}
-      />
-
-      {/* Edit Dialog */}
-      {editItem && (
-        <VaultItemDialog
-          open={!!editItem}
-          onOpenChange={(open) => !open && setEditItem(null)}
-          onSuccess={loadItems}
-          mode="edit"
-          item={editItem}
-          isDemo={isDemo}
-        />
-      )}
-
-      {/* View Dialog */}
-      {viewItem && (
-        <Dialog open={!!viewItem} onOpenChange={(open) => !open && setViewItem(null)}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>{viewItem.title}</DialogTitle>
-              <DialogDescription>
-                {categoryLabels[viewItem.category]} &middot; Updated{" "}
-                {formatDate(viewItem.updated_at)}
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div className="relative">
-                <div className="p-4 rounded-xl bg-secondary/50 border border-border min-h-[100px]">
-                  {showContent ? (
-                    <pre className="text-sm whitespace-pre-wrap break-words font-mono">
-                      {viewItem.content}
-                    </pre>
+                {/* Password field — requires face unlock */}
+                <div className="p-3.5 rounded-xl bg-white/[0.03] border border-white/[0.05]">
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Password</p>
+                  {unlocked ? (
+                    <div className="flex items-center justify-between">
+                      <code className="text-sm font-mono text-cyan-glow truncate">
+                        {selectedEntry.password}
+                      </code>
+                      <button
+                        onClick={() => handleCopy(selectedEntry.password, "pass")}
+                        className="w-7 h-7 rounded-lg flex items-center justify-center text-muted-foreground hover:text-cyan-glow hover:bg-cyan-glow/10 transition-colors shrink-0"
+                      >
+                        {copiedField === "pass" ? (
+                          <Check className="w-3.5 h-3.5 text-emerald-400" />
+                        ) : (
+                          <Copy className="w-3.5 h-3.5" />
+                        )}
+                      </button>
+                    </div>
                   ) : (
-                    <p className="text-sm text-muted-foreground">
-                      ••••••••••••••••••••••••
-                    </p>
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm text-muted-foreground/60">••••••••••••</p>
+                      <button
+                        onClick={handleFaceUnlock}
+                        disabled={scanning}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-all ${
+                          scanning
+                            ? "bg-cyan-glow/10 text-cyan-glow animate-pulse"
+                            : "bg-cyan-glow/10 text-cyan-glow hover:bg-cyan-glow/20"
+                        }`}
+                      >
+                        <ScanFace className="w-3.5 h-3.5" />
+                        {scanning ? "Scanning..." : "Face ID"}
+                      </button>
+                    </div>
                   )}
                 </div>
-                <button
-                  onClick={() => setShowContent(!showContent)}
-                  className="absolute top-3 right-3 p-1.5 rounded-lg hover:bg-accent transition-colors text-muted-foreground"
-                >
-                  {showContent ? (
-                    <EyeOff className="w-4 h-4" />
-                  ) : (
-                    <Eye className="w-4 h-4" />
-                  )}
-                </button>
+
+                {/* URL */}
+                {selectedEntry.url && (
+                  <div className="p-3.5 rounded-xl bg-white/[0.03] border border-white/[0.05]">
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Website</p>
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm text-muted-foreground truncate">{selectedEntry.url}</p>
+                      <a
+                        href={selectedEntry.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="w-7 h-7 rounded-lg flex items-center justify-center text-muted-foreground hover:text-cyan-glow hover:bg-cyan-glow/10 transition-colors shrink-0"
+                      >
+                        <ExternalLink className="w-3.5 h-3.5" />
+                      </a>
+                    </div>
+                  </div>
+                )}
+
+                {/* Notes */}
+                {selectedEntry.notes && (
+                  <div className="p-3.5 rounded-xl bg-white/[0.03] border border-white/[0.05]">
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Notes</p>
+                    <p className="text-sm text-muted-foreground">{selectedEntry.notes}</p>
+                  </div>
+                )}
               </div>
             </div>
-            <DialogFooter>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => {
-                  setViewItem(null);
-                  setEditItem(viewItem);
-                }}
-                className="gap-1.5"
-              >
-                <Pencil className="w-3.5 h-3.5" />
-                Edit
-              </Button>
-              <DeleteButton
-                itemId={viewItem.id}
-                onSuccess={() => {
-                  setViewItem(null);
-                  loadItems();
-                }}
-                isDemo={isDemo}
-              />
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+          </div>
+        </div>
       )}
     </div>
-  );
-}
-
-// ─── Create/Edit Dialog ──────────────────────────────────────────────────────
-
-function VaultItemDialog({
-  open,
-  onOpenChange,
-  onSuccess,
-  mode,
-  item,
-  isDemo,
-}: {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  onSuccess: () => void;
-  mode: "create" | "edit";
-  item?: DecryptedVaultItem;
-  isDemo: boolean;
-}) {
-  const [title, setTitle] = useState(item?.title || "");
-  const [content, setContent] = useState(item?.content || "");
-  const [category, setCategory] = useState<VaultCategory>(
-    item?.category || "note"
-  );
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (item) {
-      setTitle(item.title);
-      setContent(item.content);
-      setCategory(item.category);
-    } else {
-      setTitle("");
-      setContent("");
-      setCategory("note");
-    }
-  }, [item, open]);
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-
-    if (isDemo) {
-      alert("Demo mode: Sign up for a real account to save encrypted vault items.");
-      onOpenChange(false);
-      return;
-    }
-
-    setSaving(true);
-    setError(null);
-
-    try {
-      const supabase = createClient();
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("Not authenticated");
-
-      let key = await getSessionKey();
-      if (!key) {
-        key = await generateKey();
-        await storeSessionKey(key);
-      }
-
-      const encTitle = await encrypt(title, key);
-      const encContent = await encrypt(content, key);
-      const iv = encTitle.iv;
-
-      if (mode === "create") {
-        const { error: dbError } = await supabase.from("vault_items").insert({
-          user_id: user.id,
-          title: encTitle.ciphertext,
-          content: encContent.ciphertext,
-          category,
-          iv,
-        });
-        if (dbError) throw new Error(dbError.message);
-      } else if (item) {
-        const { error: dbError } = await supabase
-          .from("vault_items")
-          .update({
-            title: encTitle.ciphertext,
-            content: encContent.ciphertext,
-            category,
-            iv,
-          })
-          .eq("id", item.id);
-        if (dbError) throw new Error(dbError.message);
-      }
-
-      onOpenChange(false);
-      onSuccess();
-    } catch (err: any) {
-      setError(err.message || "Something went wrong");
-    } finally {
-      setSaving(false);
-    }
-  }
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>
-            {mode === "create" ? "Add Vault Item" : "Edit Vault Item"}
-          </DialogTitle>
-          <DialogDescription>
-            {mode === "create"
-              ? "This will be encrypted before leaving your device."
-              : "Changes are re-encrypted client-side."}
-          </DialogDescription>
-        </DialogHeader>
-
-        {error && (
-          <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-sm text-destructive">
-            {error}
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label>Title</Label>
-            <Input
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="e.g., Gmail password"
-              required
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label>Category</Label>
-            <Select
-              value={category}
-              onChange={(e) => setCategory(e.target.value as VaultCategory)}
-            >
-              {Object.entries(categoryLabels).map(([value, label]) => (
-                <option key={value} value={value}>
-                  {label}
-                </option>
-              ))}
-            </Select>
-          </div>
-
-          <div className="space-y-2">
-            <Label>Content</Label>
-            <Textarea
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              placeholder="Your secret content..."
-              rows={5}
-              required
-            />
-            <p className="text-xs text-muted-foreground flex items-center gap-1">
-              <Lock className="w-3 h-3" />
-              Encrypted client-side with AES-256-GCM
-            </p>
-          </div>
-
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={() => onOpenChange(false)}
-            >
-              Cancel
-            </Button>
-            <Button type="submit" disabled={saving} className="gap-2">
-              {saving && <Loader2 className="w-4 h-4 animate-spin" />}
-              {mode === "create" ? "Encrypt & Save" : "Update"}
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-// ─── Delete Button ───────────────────────────────────────────────────────────
-
-function DeleteButton({
-  itemId,
-  onSuccess,
-  isDemo,
-}: {
-  itemId: string;
-  onSuccess: () => void;
-  isDemo: boolean;
-}) {
-  const [deleting, setDeleting] = useState(false);
-
-  async function handleDelete() {
-    if (isDemo) {
-      alert("Demo mode: Sign up for a real account to manage vault items.");
-      return;
-    }
-    if (!confirm("Are you sure? This cannot be undone.")) return;
-    setDeleting(true);
-    const supabase = createClient();
-    await supabase.from("vault_items").delete().eq("id", itemId);
-    setDeleting(false);
-    onSuccess();
-  }
-
-  return (
-    <Button
-      variant="destructive"
-      size="sm"
-      onClick={handleDelete}
-      disabled={deleting}
-      className="gap-1.5"
-    >
-      {deleting ? (
-        <Loader2 className="w-3.5 h-3.5 animate-spin" />
-      ) : (
-        <Trash2 className="w-3.5 h-3.5" />
-      )}
-      Delete
-    </Button>
   );
 }

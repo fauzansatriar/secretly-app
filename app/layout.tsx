@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 
@@ -8,16 +8,23 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Secretly — Secure Digital Legacy Platform",
-  description:
-    "Protect your digital legacy with military-grade encryption. Store secrets, schedule messages, and ensure your loved ones are never left without answers.",
-  keywords: [
-    "digital legacy",
-    "encrypted vault",
-    "dead man switch",
-    "secure messages",
-    "password manager",
-  ],
+  title: "Secretly — Password Manager",
+  description: "Simple, secure password manager with Face ID verification. Store all your app passwords safely.",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "Secretly",
+  },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  viewportFit: "cover",
+  themeColor: "#070d1f",
 };
 
 export default function RootLayout({
@@ -27,7 +34,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className="dark">
-      <body className={`${inter.variable} font-sans min-h-screen`}>
+      <body className={`${inter.variable} font-sans min-h-screen safe-top`}>
         {children}
       </body>
     </html>

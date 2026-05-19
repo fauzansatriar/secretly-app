@@ -1,299 +1,220 @@
-import { cookies } from "next/headers";
-import { createClient } from "@/lib/supabase/server";
-import { redirect } from "next/navigation";
-import Link from "next/link";
+"use client";
+
+import { useState, useMemo } from "react";
 import {
-  Lock,
-  Users,
+  Search,
+  Plus,
+  Copy,
+  Eye,
+  EyeOff,
+  Check,
+  Globe,
   Mail,
-  AlertTriangle,
-  ChevronRight,
-  Activity,
-  ShieldCheck,
+  CreditCard,
+  ShoppingBag,
+  Tv,
+  Briefcase,
+  MoreHorizontal,
+  ScanFace,
 } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { PLAN_LIMITS } from "@/lib/types";
-import { timeUntil } from "@/lib/utils";
-import {
-  DEMO_PROFILE,
-  DEMO_VAULT_ITEMS,
-  DEMO_CONTACTS,
-  DEMO_MESSAGES,
-  DEMO_DEADMAN,
-} from "@/lib/demo-data";
+import { DEMO_PASSWORDS, isDemoMode } from "@/lib/demo-data";
+import type { PasswordEntry, PasswordCategory } from "@/lib/types";
 
-export default async function DashboardPage() {
-  const cookieStore = await cookies();
-  const isDemoMode = cookieStore.get("demo_mode")?.value === "true";
+const categoryConfig: Record<PasswordCategory, { label: string; icon: any }> = {
+  social: { label: "Social", icon: Globe },
+  email: { label: "Email", icon: Mail },
+  banking: { label: "Banking", icon: CreditCard },
+  shopping: { label: "Shopping", icon: ShoppingBag },
+  entertainment: { label: "Entertainment", icon: Tv },
+  work: { label: "Work", icon: Briefcase },
+  other: { label: "Other", icon: MoreHorizontal },
+};
 
-  let plan: "free" | "pro";
-  let vaultCount: number;
-  let contactsCount: number;
-  let messagesCount: number;
-  let deadman: any;
+export default function DashboardPage() {
+  const [search, setSearch] = useState("");
+  const [activeCategory, setActiveCategory] = useState<string>("all");
+  const [revealedId, setRevealedId] = useState<string | null>(null);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
 
-  if (isDemoMode) {
-    plan = DEMO_PROFILE.plan;
-    vaultCount = DEMO_VAULT_ITEMS.length;
-    contactsCount = DEMO_CONTACTS.length;
-    messagesCount = DEMO_MESSAGES.filter((m) => m.status === "pending").length;
-    deadman = DEMO_DEADMAN;
-  } else {
-    const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+  const passwords = DEMO_PASSWORDS;
 
-    if (!user) redirect("/login");
+  const filtered = useMemo(() => {
+    return passwords.filter((p) => {
+      const matchSearch =
+        p.app_name.toLowerCase().includes(search.toLowerCase()) ||
+        p.username.toLowerCase().includes(search.toLowerCase());
+      const matchCategory = activeCategory === "all" || p.category === activeCategory;
+      return matchSearch && matchCategory;
+    });
+  }, [passwords, search, activeCategory]);
 
-    const [profileRes, vaultRes, contactsRes, messagesRes, deadmanRes] =
-      await Promise.all([
-        supabase.from("profiles").select("plan").eq("id", user.id).single(),
-        supabase
-          .from("vault_items")
-          .select("id", { count: "exact", head: true })
-          .eq("user_id", user.id),
-        supabase
-          .from("emergency_contacts")
-          .select("id", { count: "exact", head: true })
-          .eq("user_id", user.id),
-        supabase
-          .from("scheduled_messages")
-          .select("id", { count: "exact", head: true })
-          .eq("user_id", user.id)
-          .eq("status", "pending"),
-        supabase
-          .from("deadman_status")
-          .select("*")
-          .eq("user_id", user.id)
-          .single(),
-      ]);
-
-    plan = (profileRes.data?.plan || "free") as "free" | "pro";
-    vaultCount = vaultRes.count || 0;
-    contactsCount = contactsRes.count || 0;
-    messagesCount = messagesRes.count || 0;
-    deadman = deadmanRes.data;
+  async function handleCopy(text: string, id: string) {
+    await navigator.clipboard.writeText(text);
+    setCopiedId(id);
+    setTimeout(() => setCopiedId(null), 1500);
   }
 
-  const limits = PLAN_LIMITS[plan];
+  function toggleReveal(id: string) {
+    setRevealedId(revealedId === id ? null : id);
+  }
 
-  const stats = [
-    {
-      label: "Vault Items",
-      value: vaultCount,
-      limit: limits.vault_items === Infinity ? null : limits.vault_items,
-      icon: Lock,
-      href: "/vault",
-      color: "text-cyan-glow",
-      bgColor: "bg-cyan-glow/10",
-    },
-    {
-      label: "Emergency Contacts",
-      value: contactsCount,
-      limit:
-        limits.emergency_contacts === Infinity
-          ? null
-          : limits.emergency_contacts,
-      icon: Users,
-      href: "/contacts",
-      color: "text-emerald-400",
-      bgColor: "bg-emerald-400/10",
-    },
-    {
-      label: "Pending Messages",
-      value: messagesCount,
-      limit:
-        limits.scheduled_messages === Infinity
-          ? null
-          : limits.scheduled_messages,
-      icon: Mail,
-      href: "/messages",
-      color: "text-violet-400",
-      bgColor: "bg-violet-400/10",
-    },
-    {
-      label: "Dead-Man Switch",
-      value: deadman?.is_active ? "Active" : "Inactive",
-      limit: null,
-      icon: AlertTriangle,
-      href: "/deadman",
-      color: deadman?.is_active ? "text-amber-400" : "text-muted-foreground",
-      bgColor: deadman?.is_active ? "bg-amber-400/10" : "bg-muted/10",
-    },
+  const categories = [
+    { key: "all", label: "All" },
+    ...Object.entries(categoryConfig).map(([key, val]) => ({
+      key,
+      label: val.label,
+    })),
   ];
 
   return (
-    <div className="space-y-8 max-w-6xl">
-      {/* Welcome */}
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
-        <p className="text-muted-foreground mt-1">
-          {isDemoMode
-            ? "Exploring Secretly with demo data. Everything you see is sample content."
-            : "Your digital legacy at a glance. Everything encrypted, everything secure."}
-        </p>
-      </div>
-
-      {/* Demo Banner */}
-      {isDemoMode && (
-        <div className="p-4 rounded-xl bg-gradient-to-r from-violet-500/10 to-cyan-glow/5 border border-violet-500/20 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-violet-500/10 flex items-center justify-center">
-              <Activity className="w-4 h-4 text-violet-400" />
-            </div>
-            <div>
-              <p className="text-sm font-medium">You&apos;re in Demo Mode</p>
-              <p className="text-xs text-muted-foreground">
-                This is sample data. Create an account to store your own encrypted secrets.
-              </p>
-            </div>
+    <div className="flex flex-col min-h-[calc(100vh-80px)] max-w-lg mx-auto">
+      {/* Header */}
+      <div className="px-1 pt-2 pb-4">
+        <div className="flex items-center justify-between mb-5">
+          <div>
+            <h1 className="text-xl font-bold">Passwords</h1>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              {passwords.length} saved accounts
+            </p>
           </div>
-          <Link
-            href="/signup"
-            className="shrink-0 px-4 py-2 rounded-lg bg-cyan-glow text-navy-950 text-xs font-medium hover:bg-cyan-soft transition-all shadow-glow"
-          >
-            Sign Up Free
-          </Link>
+          <button className="w-10 h-10 rounded-xl bg-cyan-glow/10 border border-cyan-glow/20 flex items-center justify-center text-cyan-glow hover:bg-cyan-glow/20 transition-colors">
+            <Plus className="w-5 h-5" />
+          </button>
         </div>
-      )}
 
-      {/* Stats Grid */}
-      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {stats.map((stat) => (
-          <Link key={stat.label} href={stat.href}>
-            <Card className="group hover:border-white/[0.1] transition-all cursor-pointer">
-              <CardContent>
-                <div className="flex items-center justify-between mb-3">
-                  <div
-                    className={`w-9 h-9 rounded-xl ${stat.bgColor} flex items-center justify-center ${stat.color} group-hover:shadow-glow transition-shadow`}
-                  >
-                    <stat.icon className="w-4.5 h-4.5" />
-                  </div>
-                  <ChevronRight className="w-4 h-4 text-muted-foreground/50 group-hover:text-foreground transition-colors" />
-                </div>
-                <p className="text-2xl font-bold">{stat.value}</p>
-                <div className="flex items-center justify-between mt-1">
-                  <p className="text-xs text-muted-foreground">{stat.label}</p>
-                  {stat.limit && (
-                    <Badge variant="secondary" className="text-[10px]">
-                      {stat.value}/{stat.limit}
-                    </Badge>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          </Link>
-        ))}
+        {/* Search */}
+        <div className="relative">
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search apps..."
+            className="w-full pl-10 pr-4 py-3 rounded-xl bg-white/[0.03] border border-white/[0.06] text-sm placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-cyan-glow/30 focus:border-cyan-glow/30 transition-all"
+          />
+        </div>
+
+        {/* Category pills */}
+        <div className="flex gap-2 mt-4 overflow-x-auto pb-1 scrollbar-hide">
+          {categories.map((cat) => (
+            <button
+              key={cat.key}
+              onClick={() => setActiveCategory(cat.key)}
+              className={`px-3.5 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all ${
+                activeCategory === cat.key
+                  ? "bg-cyan-glow/15 text-cyan-glow border border-cyan-glow/25"
+                  : "bg-white/[0.03] text-muted-foreground border border-white/[0.06] hover:bg-white/[0.06]"
+              }`}
+            >
+              {cat.label}
+            </button>
+          ))}
+        </div>
       </div>
 
-      {/* Status Cards */}
-      <div className="grid md:grid-cols-2 gap-5">
-        {/* Security Status */}
-        <Card>
-          <CardContent>
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-xl bg-emerald-400/10 flex items-center justify-center">
-                <ShieldCheck className="w-5 h-5 text-emerald-400" />
-              </div>
-              <div>
-                <h3 className="font-semibold">Security Status</h3>
-                <p className="text-xs text-muted-foreground">
-                  All systems operational
-                </p>
-              </div>
-            </div>
-            <div className="space-y-3">
-              <StatusRow label="End-to-end encryption" status="active" />
-              <StatusRow label="Zero-knowledge architecture" status="active" />
-              <StatusRow label="Row-level security" status="active" />
-              <StatusRow
-                label="Dead-man switch"
-                status={deadman?.is_active ? "active" : "inactive"}
-              />
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Activity / Dead-man Switch Status */}
-        <Card>
-          <CardContent>
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-xl bg-amber-400/10 flex items-center justify-center">
-                <Activity className="w-5 h-5 text-amber-400" />
-              </div>
-              <div>
-                <h3 className="font-semibold">Check-in Status</h3>
-                <p className="text-xs text-muted-foreground">
-                  {deadman?.is_active
-                    ? "Monitoring active"
-                    : "Switch not enabled"}
-                </p>
-              </div>
-            </div>
-            {deadman?.is_active ? (
-              <div className="space-y-3">
-                <div className="flex justify-between items-center text-sm">
-                  <span className="text-muted-foreground">Next deadline</span>
-                  <span className="font-medium">
-                    {timeUntil(deadman.next_deadline)}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center text-sm">
-                  <span className="text-muted-foreground">Interval</span>
-                  <span className="font-medium">
-                    Every {deadman.check_in_interval_days} days
-                  </span>
-                </div>
-                <div className="flex justify-between items-center text-sm">
-                  <span className="text-muted-foreground">Grace period</span>
-                  <span className="font-medium">
-                    {deadman.grace_period_hours} hours
-                  </span>
-                </div>
-                <Link
-                  href="/deadman"
-                  className="inline-flex items-center gap-1 mt-2 text-xs text-cyan-glow hover:text-cyan-soft transition-colors"
-                >
-                  Check in now
-                  <ChevronRight className="w-3 h-3" />
-                </Link>
-              </div>
-            ) : (
-              <div className="text-center py-4">
-                <p className="text-sm text-muted-foreground mb-3">
-                  Enable the dead-man switch to protect your loved ones
-                </p>
-                <Link
-                  href="/deadman"
-                  className="inline-flex items-center gap-1 px-4 py-2 rounded-xl bg-amber-400/10 text-amber-400 text-xs font-medium hover:bg-amber-400/20 transition-colors"
-                >
-                  <AlertTriangle className="w-3.5 h-3.5" />
-                  Set Up Switch
-                </Link>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+      {/* Password list */}
+      <div className="flex-1 space-y-2 px-1 pb-6">
+        {filtered.length === 0 ? (
+          <div className="text-center py-16">
+            <Search className="w-8 h-8 text-muted-foreground/30 mx-auto mb-3" />
+            <p className="text-sm text-muted-foreground">No passwords found</p>
+          </div>
+        ) : (
+          filtered.map((entry, i) => (
+            <PasswordCard
+              key={entry.id}
+              entry={entry}
+              isRevealed={revealedId === entry.id}
+              isCopied={copiedId === entry.id}
+              onToggleReveal={() => toggleReveal(entry.id)}
+              onCopy={() => handleCopy(entry.password, entry.id)}
+              index={i}
+            />
+          ))
+        )}
       </div>
     </div>
   );
 }
 
-function StatusRow({
-  label,
-  status,
+function PasswordCard({
+  entry,
+  isRevealed,
+  isCopied,
+  onToggleReveal,
+  onCopy,
+  index,
 }: {
-  label: string;
-  status: "active" | "inactive";
+  entry: PasswordEntry;
+  isRevealed: boolean;
+  isCopied: boolean;
+  onToggleReveal: () => void;
+  onCopy: () => void;
+  index: number;
 }) {
+  const Icon = categoryConfig[entry.category]?.icon || Globe;
+
   return (
-    <div className="flex items-center justify-between">
-      <span className="text-sm text-muted-foreground">{label}</span>
-      <Badge variant={status === "active" ? "success" : "secondary"}>
-        {status === "active" ? "Active" : "Inactive"}
-      </Badge>
+    <div
+      className="p-4 rounded-2xl bg-white/[0.02] border border-white/[0.05] hover:bg-white/[0.04] hover:border-white/[0.08] transition-all animate-in opacity-0"
+      style={{ animationDelay: `${Math.min(index * 50, 400)}ms` }}
+    >
+      <div className="flex items-center gap-3">
+        {/* App icon */}
+        <div
+          className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0"
+          style={{ backgroundColor: `${entry.icon_color}15` }}
+        >
+          <span
+            className="text-lg font-bold"
+            style={{ color: entry.icon_color }}
+          >
+            {entry.app_name[0]}
+          </span>
+        </div>
+
+        {/* Info */}
+        <div className="flex-1 min-w-0">
+          <h3 className="text-sm font-semibold truncate">{entry.app_name}</h3>
+          <p className="text-xs text-muted-foreground truncate">{entry.username}</p>
+        </div>
+
+        {/* Actions */}
+        <div className="flex items-center gap-1 shrink-0">
+          <button
+            onClick={onToggleReveal}
+            className="w-8 h-8 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-white/[0.05] transition-colors"
+          >
+            {isRevealed ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+          </button>
+          <button
+            onClick={onCopy}
+            className="w-8 h-8 rounded-lg flex items-center justify-center text-muted-foreground hover:text-cyan-glow hover:bg-cyan-glow/10 transition-colors"
+          >
+            {isCopied ? (
+              <Check className="w-3.5 h-3.5 text-emerald-400" />
+            ) : (
+              <Copy className="w-3.5 h-3.5" />
+            )}
+          </button>
+        </div>
+      </div>
+
+      {/* Password reveal row */}
+      {isRevealed && (
+        <div className="mt-3 pt-3 border-t border-white/[0.05]">
+          <div className="flex items-center gap-2">
+            <code className="flex-1 text-xs font-mono text-cyan-glow bg-cyan-glow/5 px-3 py-2 rounded-lg truncate">
+              {entry.password}
+            </code>
+          </div>
+          {entry.notes && (
+            <p className="text-[11px] text-muted-foreground mt-2">
+              Note: {entry.notes}
+            </p>
+          )}
+        </div>
+      )}
     </div>
   );
 }

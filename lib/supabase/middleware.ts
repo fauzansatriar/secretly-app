@@ -2,11 +2,9 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
 export async function updateSession(request: NextRequest) {
-  let supabaseResponse = NextResponse.next({
-    request,
-  });
+  let supabaseResponse = NextResponse.next({ request });
 
-  // Check for demo mode — allow access to protected routes
+  // Check for demo mode
   const isDemoMode = request.cookies.get("demo_mode")?.value === "true";
 
   const supabase = createServerClient(
@@ -17,14 +15,12 @@ export async function updateSession(request: NextRequest) {
         getAll() {
           return request.cookies.getAll();
         },
-        setAll(cookiesToSet: any) {
-          cookiesToSet.forEach(({ name, value }: any) =>
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value }) =>
             request.cookies.set(name, value)
           );
-          supabaseResponse = NextResponse.next({
-            request,
-          });
-          cookiesToSet.forEach(({ name, value, options }: any) =>
+          supabaseResponse = NextResponse.next({ request });
+          cookiesToSet.forEach(({ name, value, options }) =>
             supabaseResponse.cookies.set(name, value, options)
           );
         },
@@ -32,32 +28,19 @@ export async function updateSession(request: NextRequest) {
     }
   );
 
-  // Refresh session - important for Server Components
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // Protected routes — redirect unauthenticated users to login (unless demo mode)
-  const isProtectedRoute = request.nextUrl.pathname.startsWith("/dashboard") ||
+  // Protected routes
+  const isProtectedRoute =
+    request.nextUrl.pathname.startsWith("/dashboard") ||
     request.nextUrl.pathname.startsWith("/vault") ||
-    request.nextUrl.pathname.startsWith("/contacts") ||
-    request.nextUrl.pathname.startsWith("/messages") ||
-    request.nextUrl.pathname.startsWith("/deadman") ||
     request.nextUrl.pathname.startsWith("/settings");
 
   if (isProtectedRoute && !user && !isDemoMode) {
     const url = request.nextUrl.clone();
-    url.pathname = "/login";
-    return NextResponse.redirect(url);
-  }
-
-  // Redirect authenticated users away from auth pages
-  const isAuthRoute = request.nextUrl.pathname === "/login" ||
-    request.nextUrl.pathname === "/signup";
-
-  if (isAuthRoute && (user || isDemoMode)) {
-    const url = request.nextUrl.clone();
-    url.pathname = "/dashboard";
+    url.pathname = "/";
     return NextResponse.redirect(url);
   }
 
