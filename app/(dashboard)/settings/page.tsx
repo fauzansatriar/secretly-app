@@ -80,8 +80,9 @@ export default function SettingsPage() {
 
   // ─── Dark mode toggle ────────────────────────────────────────────────────
   function handleThemeToggle() {
-    updateSettings({ dark_mode: !settings.dark_mode });
-    // In a full app this would toggle the html class; for now it persists the setting
+    const newValue = !settings.dark_mode;
+    updateSettings({ dark_mode: newValue });
+    document.documentElement.classList.toggle("dark", newValue);
   }
 
   // ─── Notifications toggle ────────────────────────────────────────────────
@@ -221,7 +222,7 @@ export default function SettingsPage() {
           <SettingsToggle
             icon={settings.dark_mode ? Moon : Sun}
             label="Dark Mode"
-            description="Always dark for now"
+            description={settings.dark_mode ? "Dark theme active" : "Light theme active"}
             color="text-amber-400"
             enabled={settings.dark_mode}
             onToggle={handleThemeToggle}

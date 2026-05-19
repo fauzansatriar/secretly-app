@@ -55,7 +55,14 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     }
 
     if (storedSettings) {
-      try { setSettings({ ...DEFAULT_SETTINGS, ...JSON.parse(storedSettings) }); } catch {}
+      try {
+        const parsed = { ...DEFAULT_SETTINGS, ...JSON.parse(storedSettings) };
+        setSettings(parsed);
+        // Apply theme
+        document.documentElement.classList.toggle("dark", parsed.dark_mode !== false);
+      } catch {}
+    } else {
+      document.documentElement.classList.add("dark");
     }
 
     if (storedLocked === "true") {

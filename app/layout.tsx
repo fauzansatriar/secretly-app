@@ -33,10 +33,22 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className="dark">
+    <html lang="en" suppressHydrationWarning>
       <body className={`${inter.variable} font-sans min-h-screen safe-top`}>
+        <ThemeScript />
         {children}
       </body>
     </html>
+  );
+}
+
+/** Inline script to apply theme before paint (no flash) */
+function ThemeScript() {
+  return (
+    <script
+      dangerouslySetInnerHTML={{
+        __html: `(function(){try{var s=JSON.parse(localStorage.getItem('secretly_settings')||'{}');document.documentElement.classList.toggle('dark',s.dark_mode!==false)}catch(e){document.documentElement.classList.add('dark')}})()`,
+      }}
+    />
   );
 }
