@@ -1,11 +1,8 @@
-export type Plan = "free" | "pro";
-
 export interface Profile {
   id: string;
   email: string;
   full_name: string | null;
   avatar_url: string | null;
-  plan: Plan;
   created_at: string;
   updated_at: string;
 }
@@ -48,7 +45,4 @@ export const DEFAULT_SETTINGS: AppSettings = {
   notifications_enabled: false,
 };
 
-export const PLAN_LIMITS = {
-  free: { passwords: 15 },
-  pro: { passwords: Infinity },
-} as const;
+

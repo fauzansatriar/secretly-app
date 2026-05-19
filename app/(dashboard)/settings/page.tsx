@@ -166,9 +166,7 @@ export default function SettingsPage() {
           <h2 className="font-semibold">Alex</h2>
           <p className="text-xs text-muted-foreground">demo@secretly.app</p>
         </div>
-        <div className="px-2.5 py-1 rounded-full bg-cyan-glow/10 border border-cyan-glow/20">
-          <span className="text-[10px] font-semibold text-cyan-glow">PRO</span>
-        </div>
+
       </div>
 
       <div className="space-y-6 px-1">
